@@ -1,6 +1,17 @@
 -- Extensions utiles
-CREATE EXTENSION IF NOT EXISTS pgcrypto; -- pour gen_random_uuid()
+CREATE EXTENSION IF NOT EXISTS p-- Demandes d'hébergement
+CREATE TABLE accommodation_guests (
+  accommodation_id UUID NOT NULL REFERENCES accommodations(id) ON DELETE CASCADE,
+  guest_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  status request_status NOT NULL,
+  requested_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+  PRIMARY KEY (accommodation_id, guest_id)
+); -- pour gen_random_uuid()
 CREATE EXTENSION IF NOT EXISTS pg_trgm;  -- pour recherche floue si besoin
+
+-- Types ENUM
+CREATE TYPE user_role AS ENUM ('member', 'admin');
+CREATE TYPE request_status AS ENUM ('requested', 'accepted', 'declined');
 
 -- Écoles (nom = ville)
 CREATE TABLE schools (
@@ -12,7 +23,7 @@ CREATE TABLE schools (
 CREATE TABLE users (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   school_id UUID NOT NULL REFERENCES schools(id) ON DELETE RESTRICT,
-  role TEXT NOT NULL CHECK (role IN ('member','admin')),
+  role user_role NOT NULL,
   first_name TEXT NOT NULL,
   last_name  TEXT NOT NULL,
   phone TEXT,
@@ -74,7 +85,7 @@ CREATE INDEX ON rides (event_id, depart_time);
 CREATE TABLE ride_passengers (
   ride_id UUID NOT NULL REFERENCES rides(id) ON DELETE CASCADE,
   passenger_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
-  status TEXT NOT NULL CHECK (status IN ('requested','accepted','declined')),
+  status request_status NOT NULL,
   requested_at TIMESTAMPTZ NOT NULL DEFAULT now(),
   PRIMARY KEY (ride_id, passenger_id)
 );

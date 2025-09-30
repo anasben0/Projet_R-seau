@@ -3,9 +3,9 @@ server:
 
 spring:
   datasource:
-    url: jdbc:postgresql://localhost:5433/appdb
-    username: app
-    password: app
+    url: ${DB_URL:jdbc:postgresql://localhost:5433/polyrezo_db}
+    username: ${DB_USERNAME:polyrezo_user}
+    password: ${DB_PASSWORD:SecurePassword@2025!}
   jpa:
     hibernate:
       ddl-auto: validate
