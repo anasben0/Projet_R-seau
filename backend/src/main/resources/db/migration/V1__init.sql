@@ -20,7 +20,7 @@ CREATE TABLE users (
   first_name TEXT NOT NULL,
   last_name  TEXT NOT NULL,
   phone TEXT,
-  email TEXT UNIQUE,
+  email TEXT UNIQUE NOT NULL,
   password_hash TEXT NOT NULL,
   created_at TIMESTAMPTZ NOT NULL DEFAULT now()
 );
