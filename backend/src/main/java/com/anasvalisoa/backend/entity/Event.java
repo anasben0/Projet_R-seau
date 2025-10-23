@@ -1,6 +1,7 @@
 package com.anasvalisoa.backend.entity;
 
 import jakarta.persistence.*;
+import org.hibernate.annotations.UuidGenerator;
 import java.time.OffsetDateTime;
 import java.util.UUID;
 
@@ -8,6 +9,7 @@ import java.util.UUID;
 @Table(name = "events")
 public class Event {
   @Id
+  @UuidGenerator
   private UUID id;
 
   @Column(name = "school_id", nullable = false)
@@ -17,8 +19,10 @@ public class Event {
   private String name;
 
   private String activities;
+  
   @Column(name = "starts_at", nullable = false)
   private OffsetDateTime startsAt;
+  
   @Column(name = "ends_at")
   private OffsetDateTime endsAt;
 

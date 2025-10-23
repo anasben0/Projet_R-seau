@@ -26,10 +26,10 @@ public class EnvironmentConfig {
                              }
                          });
                 }
-                System.out.println("✅ Variables d'environnement chargées depuis .env");
+                System.out.println("Variables d'environnement chargées depuis .env");
             }
         } catch (IOException e) {
-            System.err.println("⚠️ Erreur lors du chargement du fichier .env: " + e.getMessage());
+            System.err.println("Erreur lors du chargement du fichier .env: " + e.getMessage());
         }
     }
 }

@@ -35,7 +35,8 @@ CREATE TABLE events (
   ends_at   TIMESTAMPTZ,
   address TEXT,
   room TEXT,
-  created_by UUID NOT NULL REFERENCES users(id) ON DELETE RESTRICT
+  created_by UUID NOT NULL REFERENCES users(id) ON DELETE RESTRICT,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT now()
 );
 CREATE INDEX ON events (school_id, starts_at);
 
