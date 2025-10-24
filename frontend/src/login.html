@@ -282,8 +282,8 @@
         <!-- Formulaire Admin -->
         <form id="adminLoginForm" class="hidden">
             <div class="form-group">
-                <label for="adminUsername">Nom d'utilisateur</label>
-                <input type="text" id="adminUsername" name="username" required autocomplete="username">
+                <label for="adminUsername">Email administrateur</label>
+                <input type="email" id="adminUsername" name="username" required autocomplete="email" placeholder="admin@polytech.fr">
             </div>
 
             <div class="form-group">
@@ -319,6 +319,9 @@
 
     <script>
         document.addEventListener('DOMContentLoaded', function() {
+            // Configuration de l'API
+            const API_BASE_URL = 'http://localhost:8080/api';
+            
             // Éléments
             const userForm = document.getElementById('userLoginForm');
             const adminForm = document.getElementById('adminLoginForm');
@@ -405,8 +408,8 @@
                 document.getElementById('adminSuccessMessage').style.display = 'none';
             }
 
-            // Simulation de connexion
-            function simulateLogin(type, identifier, password, remember) {
+            // Fonction de connexion réelle avec appel API
+            async function simulateLogin(type, identifier, password, remember) {
                 const btnId = type === 'admin' ? 'adminLoginBtn' : 'userLoginBtn';
                 const btn = document.getElementById(btnId);
                 const successMsgId = type === 'admin' ? 'adminSuccessMessage' : 'userSuccessMessage';
@@ -416,46 +419,75 @@
                 btn.disabled = true;
                 btn.innerHTML = '<div class="loading"></div>Connexion...';
 
-                // Simulation d'une requête
-                setTimeout(() => {
-                    if (type === 'admin') {
-                        // Vérification admin
-                        if (identifier === 'admin' && password === 'password123') {
-                            showMessage(successMsgId, 'Connexion admin réussie ! Redirection...');
-                            if (remember) {
-                                localStorage.setItem('polytech_admin_remember', 'true');
-                            }
-                            // Sauvegarde du nom d'utilisateur admin pour affichage éventuel
-                            localStorage.setItem('polytech_admin_username', identifier);
-                            // Rediriger vers la page dashboard (fichier local `dashboard.html`)
-                            setTimeout(() => {
-                                window.location.href = 'dashboard.html';
-                            }, 800);
-                        } else {
-                            showMessage(errorMsgId, 'Identifiants administrateur incorrects.');
-                        }
-                    } else {
-                        // Vérification utilisateur
-                        if (identifier.includes('@') && password.length >= 6) {
-                            showMessage(successMsgId, 'Connexion réussie ! Bienvenue.');
-                            if (remember) {
-                                localStorage.setItem('polytech_user_remember', 'true');
-                            }
-                            // Sauvegarde de l'email pour conserver la session et affichage
-                            localStorage.setItem('polytech_user_email', identifier);
-                            // Redirection vers le dashboard (fichier `dashboard.html` dans le même dossier)
-                            setTimeout(() => {
-                                window.location.href = 'dashboard.html';
-                            }, 800);
-                        } else {
-                            showMessage(errorMsgId, 'Email ou mot de passe incorrect.');
-                        }
+                try {
+                    // Appel API pour la connexion
+                    const response = await fetch(`${API_BASE_URL}/auth/login`, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify({
+                            email: identifier,
+                            password: password
+                        })
+                    });
+
+                    if (!response.ok) {
+                        throw new Error('Identifiants incorrects');
                     }
 
+                    const responseData = await response.json();
+                    
+                    // Vérifier si la connexion a réussi
+                    if (!responseData.success || !responseData.user) {
+                        showMessage(errorMsgId, responseData.message || 'Email ou mot de passe incorrect.');
+                        btn.disabled = false;
+                        btn.innerHTML = type === 'admin' ? 'Se connecter en tant qu\'Admin' : 'Se connecter';
+                        return;
+                    }
+
+                    const userData = responseData.user;
+                    
+                    // Vérifier le rôle si en mode admin
+                    if (type === 'admin' && userData.role !== 'admin') {
+                        showMessage(errorMsgId, 'Accès refusé : droits administrateur requis.');
+                        btn.disabled = false;
+                        btn.innerHTML = type === 'admin' ? 'Se connecter en tant qu\'Admin' : 'Se connecter';
+                        return;
+                    }
+
+                    // Connexion réussie
+                    showMessage(successMsgId, 'Connexion réussie ! Redirection...');
+
+                    // Sauvegarder les données utilisateur dans localStorage
+                    localStorage.setItem('polytech_user', JSON.stringify({
+                        id: userData.id,
+                        email: userData.email,
+                        firstName: userData.firstName,
+                        lastName: userData.lastName,
+                        role: userData.role,
+                        schoolId: userData.schoolId,
+                        phone: userData.phone,
+                        createdAt: userData.createdAt
+                    }));
+
+                    if (remember) {
+                        localStorage.setItem('polytech_remember', 'true');
+                    }
+
+                    // Redirection vers le dashboard
+                    setTimeout(() => {
+                        window.location.href = 'dashboard.html';
+                    }, 800);
+
+                } catch (error) {
+                    console.error('Erreur de connexion:', error);
+                    showMessage(errorMsgId, error.message || 'Email ou mot de passe incorrect.');
+                    
                     // Réactiver le bouton
                     btn.disabled = false;
                     btn.innerHTML = type === 'admin' ? 'Se connecter en tant qu\'Admin' : 'Se connecter';
-                }, 1500);
+                }
             }
         });
     </script>
