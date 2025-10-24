@@ -409,14 +409,100 @@
                     <img src="carte_france.png" alt="Carte de France" class="france-image" onerror="console.error('Erreur chargement image:', this.src)">
                     
                     <!-- Pins cliquables positionnés par-dessus l'image -->
-                    <div class="pin-overlay" data-city="paris" onclick="showInfo('paris', event)" style="top: 23%; left: 43%;">
+                    <!-- Paris (Région parisienne / centre-nord) -->
+                    <div class="pin-overlay" data-city="paris" onclick="showInfo('paris', event)" style="top: 27%; left: 50.7%;">
                         <div class="pin-marker">📍</div>
                         <div class="pin-label">Paris</div>
                     </div>
                     
-                    <div class="pin-overlay" data-city="marseille" onclick="showInfo('marseille', event)" style="top: 76%; left: 60%;">
+                    <!-- Saclay (proche de Paris, sud-ouest) -->
+                    <div class="pin-overlay" data-city="saclay" onclick="showInfo('saclay', event)" style="top: 31%; left: 50.1%;">
+                        <div class="pin-marker">📍</div>
+                        <div class="pin-label">Saclay</div>
+                    </div>
+                    
+                    <!-- Lille (Nord, proche de la Belgique) -->
+                    <div class="pin-overlay" data-city="lille" onclick="showInfo('lille', event)" style="top: 15%; left: 50.8%;">
+                        <div class="pin-marker">📍</div>
+                        <div class="pin-label">Lille</div>
+                    </div>
+                    
+                    <!-- Nancy (Est, proche de l'Allemagne) -->
+                    <div class="pin-overlay" data-city="nancy" onclick="showInfo('nancy', event)" style="top: 25%; left: 60%;">
+                        <div class="pin-marker">📍</div>
+                        <div class="pin-label">Nancy</div>
+                    </div>
+                    
+                    <!-- Dijon (Est, au-dessus de Lyon) -->
+                    <div class="pin-overlay" data-city="dijon" onclick="showInfo('dijon', event)" style="top: 40%; left: 55.3%;">
+                        <div class="pin-marker">📍</div>
+                        <div class="pin-label">Dijon</div>
+                    </div>
+                    
+                    <!-- Orleans (Centre) -->
+                    <div class="pin-overlay" data-city="orleans" onclick="showInfo('orleans', event)" style="top: 33%; left: 49%;">
+                        <div class="pin-marker">📍</div>
+                        <div class="pin-label">Orléans</div>
+                    </div>
+                    
+                    <!-- Tours (Centre-ouest, Val de Loire) -->
+                    <div class="pin-overlay" data-city="tours" onclick="showInfo('tours', event)" style="top: 39%; left: 47%;">
+                        <div class="pin-marker">📍</div>
+                        <div class="pin-label">Tours</div>
+                    </div>
+                    
+                    <!-- Angers (Ouest, Pays de la Loire) -->
+                    <div class="pin-overlay" data-city="angers" onclick="showInfo('angers', event)" style="top: 37%; left: 43.5%;">
+                        <div class="pin-marker">📍</div>
+                        <div class="pin-label">Angers</div>
+                    </div>
+                    
+                    <!-- Nantes (Ouest, côte atlantique) -->
+                    <div class="pin-overlay" data-city="nantes" onclick="showInfo('nantes', event)" style="top: 42%; left: 40.3%;">
+                        <div class="pin-marker">📍</div>
+                        <div class="pin-label">Nantes</div>
+                    </div>
+                    
+                    <!-- Clermont-Ferrand (Centre, Auvergne) -->
+                    <div class="pin-overlay" data-city="clermont-ferrand" onclick="showInfo('clermont-ferrand', event)" style="top: 52%; left: 51%;">
+                        <div class="pin-marker">📍</div>
+                        <div class="pin-label">Clermont-Ferrand</div>
+                    </div>
+                    
+                    <!-- Lyon (Centre-est, Rhône-Alpes) -->
+                    <div class="pin-overlay" data-city="lyon" onclick="showInfo('lyon', event)" style="top: 50%; left: 55.1%;">
+                        <div class="pin-marker">📍</div>
+                        <div class="pin-label">Lyon</div>
+                    </div>
+                    
+                    <!-- Annecy-Chambéry (Est, proche de la Suisse) -->
+                    <div class="pin-overlay" data-city="annecy-chambery" onclick="showInfo('annecy-chambery', event)" style="top: 50%; left: 60%;">
+                        <div class="pin-marker">📍</div>
+                        <div class="pin-label">Annecy-Chambéry</div>
+                    </div>
+                    
+                    <!-- Grenoble (Sud-est, Alpes) -->
+                    <div class="pin-overlay" data-city="grenoble" onclick="showInfo('grenoble', event)" style="top: 56%; left: 57.5%;">
+                        <div class="pin-marker">📍</div>
+                        <div class="pin-label">Grenoble</div>
+                    </div>
+                    
+                    <!-- Nice (Sud-est, Côte d'Azur) -->
+                    <div class="pin-overlay" data-city="nice" onclick="showInfo('nice', event)" style="top: 72%; left: 61.5%;">
+                        <div class="pin-marker">📍</div>
+                        <div class="pin-label">Nice</div>
+                    </div>
+                    
+                    <!-- Marseille (Sud-est, Méditerranée) -->
+                    <div class="pin-overlay" data-city="marseille" onclick="showInfo('marseille', event)" style="top: 75%; left: 57.5%;">
                         <div class="pin-marker">📍</div>
                         <div class="pin-label">Marseille</div>
+                    </div>
+                    
+                    <!-- Montpellier (Sud, proche de la Méditerranée) -->
+                    <div class="pin-overlay" data-city="montpellier" onclick="showInfo('montpellier', event)" style="top: 73%; left: 53%;">
+                        <div class="pin-marker">📍</div>
+                        <div class="pin-label">Montpellier</div>
                     </div>
 
                     <!-- Info Cards -->
@@ -424,19 +510,145 @@
                         <button class="close-card" onclick="closeInfo('paris')">×</button>
                         <h3>🗼 Paris</h3>
                         <p><strong>Événements à venir:</strong></p>
-                        <p class="event-count">🎉 3 événements festifs</p>
+                        <p class="event-count">🎉 3 événements</p>
                         <p>• Soirée Polytech - 15 Oct</p>
                         <p>• Festival Étudiant - 22 Oct</p>
                         <p>• Gala de Fin d'Année - 5 Nov</p>
                     </div>
 
-                    <div id="info-marseille" class="info-card" style="top: 400px; left: 380px;">
+                    <div id="info-saclay" class="info-card" style="top: 140px; left: 260px;">
+                        <button class="close-card" onclick="closeInfo('saclay')">×</button>
+                        <h3>🎓 Saclay</h3>
+                        <p><strong>Événements à venir:</strong></p>
+                        <p class="event-count">🔬 2 événements</p>
+                        <p>• Innovation Tech Day - 18 Oct</p>
+                        <p>• Hackathon Polytech - 28 Oct</p>
+                    </div>
+
+                    <div id="info-lille" class="info-card" style="top: 60px; left: 300px;">
+                        <button class="close-card" onclick="closeInfo('lille')">×</button>
+                        <h3>🏛️ Lille</h3>
+                        <p><strong>Événements à venir:</strong></p>
+                        <p class="event-count">🎭 2 événements</p>
+                        <p>• Braderie Étudiante - 20 Oct</p>
+                        <p>• Concert Inter-Écoles - 2 Nov</p>
+                    </div>
+
+                    <div id="info-nancy" class="info-card" style="top: 150px; left: 450px;">
+                        <button class="close-card" onclick="closeInfo('nancy')">×</button>
+                        <h3>🏰 Nancy</h3>
+                        <p><strong>Événements à venir:</strong></p>
+                        <p class="event-count">🎨 1 événement</p>
+                        <p>• Visite Campus Artem - 25 Oct</p>
+                    </div>
+
+                    <div id="info-dijon" class="info-card" style="top: 200px; left: 420px;">
+                        <button class="close-card" onclick="closeInfo('dijon')">×</button>
+                        <h3>🍷 Dijon</h3>
+                        <p><strong>Événements à venir:</strong></p>
+                        <p class="event-count">🎊 2 événements</p>
+                        <p>• Soirée Découverte Vignoble - 17 Oct</p>
+                        <p>• Tournoi Sportif - 30 Oct</p>
+                    </div>
+
+                    <div id="info-orleans" class="info-card" style="top: 180px; left: 280px;">
+                        <button class="close-card" onclick="closeInfo('orleans')">×</button>
+                        <h3>⚜️ Orléans</h3>
+                        <p><strong>Événements à venir:</strong></p>
+                        <p class="event-count">📚 1 événement</p>
+                        <p>• Forum des Associations - 19 Oct</p>
+                    </div>
+
+                    <div id="info-tours" class="info-card" style="top: 200px; left: 240px;">
+                        <button class="close-card" onclick="closeInfo('tours')">×</button>
+                        <h3>🏰 Tours</h3>
+                        <p><strong>Événements à venir:</strong></p>
+                        <p class="event-count">🎵 2 événements</p>
+                        <p>• Festival des Châteaux - 21 Oct</p>
+                        <p>• Soirée Jazz - 3 Nov</p>
+                    </div>
+
+                    <div id="info-angers" class="info-card" style="top: 190px; left: 180px;">
+                        <button class="close-card" onclick="closeInfo('angers')">×</button>
+                        <h3>🌿 Angers</h3>
+                        <p><strong>Événements à venir:</strong></p>
+                        <p class="event-count">🌱 1 événement</p>
+                        <p>• Conférence Développement Durable - 24 Oct</p>
+                    </div>
+
+                    <div id="info-nantes" class="info-card" style="top: 220px; left: 150px;">
+                        <button class="close-card" onclick="closeInfo('nantes')">×</button>
+                        <h3>🎡 Nantes</h3>
+                        <p><strong>Événements à venir:</strong></p>
+                        <p class="event-count">🎪 3 événements</p>
+                        <p>• Visite Machines de l'Île - 16 Oct</p>
+                        <p>• Soirée Startup - 26 Oct</p>
+                        <p>• Escape Game Géant - 1 Nov</p>
+                    </div>
+
+                    <div id="info-clermont-ferrand" class="info-card" style="top: 300px; left: 300px;">
+                        <button class="close-card" onclick="closeInfo('clermont-ferrand')">×</button>
+                        <h3>🌋 Clermont-Ferrand</h3>
+                        <p><strong>Événements à venir:</strong></p>
+                        <p class="event-count">⛰️ 2 événements</p>
+                        <p>• Randonnée Puy de Dôme - 19 Oct</p>
+                        <p>• Festival Court-Métrage - 27 Oct</p>
+                    </div>
+
+                    <div id="info-lyon" class="info-card" style="top: 300px; left: 380px;">
+                        <button class="close-card" onclick="closeInfo('lyon')">×</button>
+                        <h3>🦁 Lyon</h3>
+                        <p><strong>Événements à venir:</strong></p>
+                        <p class="event-count">🍽️ 3 événements</p>
+                        <p>• Fête des Lumières Étudiante - 15 Oct</p>
+                        <p>• Tournoi e-Sport - 23 Oct</p>
+                        <p>• Bouchon Tour - 4 Nov</p>
+                    </div>
+
+                    <div id="info-annecy-chambery" class="info-card" style="top: 290px; left: 450px;">
+                        <button class="close-card" onclick="closeInfo('annecy-chambery')">×</button>
+                        <h3>🏔️ Annecy-Chambéry</h3>
+                        <p><strong>Événements à venir:</strong></p>
+                        <p class="event-count">⛷️ 2 événements</p>
+                        <p>• Journée Lac d'Annecy - 20 Oct</p>
+                        <p>• Préparation Ski Campus - 5 Nov</p>
+                    </div>
+
+                    <div id="info-grenoble" class="info-card" style="top: 340px; left: 440px;">
+                        <button class="close-card" onclick="closeInfo('grenoble')">×</button>
+                        <h3>⛰️ Grenoble</h3>
+                        <p><strong>Événements à venir:</strong></p>
+                        <p class="event-count">� 2 événements</p>
+                        <p>• Soirée Montagne - 22 Oct</p>
+                        <p>• Innovation Tech Summit - 31 Oct</p>
+                    </div>
+
+                    <div id="info-nice" class="info-card" style="top: 420px; left: 480px;">
+                        <button class="close-card" onclick="closeInfo('nice')">×</button>
+                        <h3>🌴 Nice</h3>
+                        <p><strong>Événements à venir:</strong></p>
+                        <p class="event-count">☀️ 3 événements</p>
+                        <p>• Beach Volley Tournament - 17 Oct</p>
+                        <p>• Carnaval Étudiant - 24 Oct</p>
+                        <p>• Promenade des Anglais Run - 6 Nov</p>
+                    </div>
+
+                    <div id="info-marseille" class="info-card" style="top: 470px; left: 380px;">
                         <button class="close-card" onclick="closeInfo('marseille')">×</button>
                         <h3>⚓ Marseille</h3>
                         <p><strong>Événements à venir:</strong></p>
-                        <p class="event-count">🎊 2 événements festifs</p>
+                        <p class="event-count">🎊 2 événements</p>
                         <p>• Beach Party Polytech - 18 Oct</p>
                         <p>• Tournoi Sportif - 25 Oct</p>
+                    </div>
+
+                    <div id="info-montpellier" class="info-card" style="top: 440px; left: 310px;">
+                        <button class="close-card" onclick="closeInfo('montpellier')">×</button>
+                        <h3>☀️ Montpellier</h3>
+                        <p><strong>Événements à venir:</strong></p>
+                        <p class="event-count">🎭 2 événements</p>
+                        <p>• Festival des Arts - 21 Oct</p>
+                        <p>• Soirée Plage - 29 Oct</p>
                     </div>
                 </div>
             </div>
