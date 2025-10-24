@@ -9,7 +9,6 @@ services:
       POSTGRES_DB: ${POSTGRES_DB:-polyrezo_db}
       POSTGRES_USER: ${POSTGRES_USER:-polyrezo_user}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-SecurePassword@2025!}
-      PGDATA: /var/lib/postgresql/data/pgdata
     ports:
       - "5433:5432"
     volumes:
