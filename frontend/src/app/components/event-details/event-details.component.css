@@ -1,10 +1,14 @@
 .event-details-container {
+  width: 100%;
   min-height: 100vh;
   background: #f5f7fa;
+  margin: 0;
+  padding: 0;
 }
 
 /* Message de chargement */
 .loading-container {
+  width: 100%;
   min-height: 100vh;
   display: flex;
   flex-direction: column;
@@ -12,6 +16,7 @@
   justify-content: center;
   background: #f5f7fa;
   padding: 2rem;
+  margin: 0;
 }
 
 .loading-container h2 {

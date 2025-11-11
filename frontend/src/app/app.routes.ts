@@ -4,6 +4,7 @@ import { RegisterComponent } from './components/register/register.component';
 import { Dashboard } from './components/dashboard/dashboard';
 import { EventsComponent } from './components/events/events.component';
 import { EventDetailsComponent } from './components/event-details/event-details.component';
+import { AccommodationsComponent } from './components/accommodations/accommodations.component';
 import { authGuard } from './guards/auth-guard';
 
 export const routes: Routes = [
@@ -23,6 +24,11 @@ export const routes: Routes = [
   { 
     path: 'events/:id', 
     component: EventDetailsComponent,
+    canActivate: [authGuard]  // Route protégée
+  },
+  { 
+    path: 'accommodations', 
+    component: AccommodationsComponent,
     canActivate: [authGuard]  // Route protégée
   },
   { path: '**', redirectTo: '/login' }

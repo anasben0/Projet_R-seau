@@ -1,0 +1,209 @@
+<div class="accommodations-container">
+  <!-- Header -->
+  <div class="accommodations-header">
+    <div class="header-content">
+      <button class="back-btn" (click)="goToDashboard()">
+        ← Retour à la CaRRte
+      </button>
+      <h1>🏠 Hébergements Polytech</h1>
+      <p>Trouvez un logement pour vos événements réseau</p>
+    </div>
+  </div>
+
+  <!-- Main Content -->
+  <div class="accommodations-content">
+    
+    <!-- Section recherche -->
+    <div class="search-section">
+      <div class="search-bar">
+        <span class="search-icon">🔍</span>
+        <input 
+          type="text" 
+          [(ngModel)]="searchQuery"
+          (input)="onSearchChange()"
+          placeholder="Rechercher un hébergement par nom, adresse ou ville..."
+          class="search-input">
+      </div>
+    </div>
+
+    <!-- Filtres par ville -->
+    <div class="filters-section">
+      <h2>Filtrer par ville</h2>
+      <div class="city-filters">
+        <button 
+          *ngFor="let city of availableCities" 
+          class="filter-btn"
+          [class.active]="selectedCity === city"
+          (click)="filterByCity(city)">
+          {{ city }}
+        </button>
+      </div>
+    </div>
+
+    <!-- Bouton Ajouter (Admin uniquement) -->
+    <div class="admin-section" *ngIf="isAdmin">
+      <button class="add-btn" (click)="toggleAddForm()">
+        {{ showAddForm ? '❌ Annuler' : '➕ Ajouter un hébergement' }}
+      </button>
+    </div>
+
+    <!-- Formulaire d'ajout (Admin) -->
+    <div class="add-form-container" *ngIf="showAddForm && isAdmin">
+      <h3>➕ Nouveau hébergement</h3>
+      <form class="add-form" (ngSubmit)="addAccommodation()">
+        <div class="form-row">
+          <div class="form-group">
+            <label>Nom *</label>
+            <input 
+              type="text" 
+              [(ngModel)]="newAccommodation.name" 
+              name="name"
+              placeholder="Ex: Résidence Polytech"
+              required>
+          </div>
+          <div class="form-group">
+            <label>Ville *</label>
+            <select [(ngModel)]="newAccommodation.city" name="city" required>
+              <option value="">Sélectionner une ville</option>
+              <option *ngFor="let city of availableCities.slice(1)" [value]="city">{{ city }}</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label>Adresse *</label>
+          <input 
+            type="text" 
+            [(ngModel)]="newAccommodation.address" 
+            name="address"
+            placeholder="Ex: 15 Rue de la République"
+            required>
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label>Nombre total de places *</label>
+            <input 
+              type="number" 
+              [(ngModel)]="newAccommodation.totalSpots" 
+              name="totalSpots"
+              min="1"
+              required>
+          </div>
+          <div class="form-group">
+            <label>Places disponibles *</label>
+            <input 
+              type="number" 
+              [(ngModel)]="newAccommodation.availableSpots" 
+              name="availableSpots"
+              min="0"
+              [max]="newAccommodation.totalSpots"
+              required>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label>Email de contact</label>
+          <input 
+            type="email" 
+            [(ngModel)]="newAccommodation.contactEmail" 
+            name="contactEmail"
+            placeholder="contact@example.com">
+        </div>
+
+        <div class="form-group">
+          <label>Description</label>
+          <textarea 
+            [(ngModel)]="newAccommodation.description" 
+            name="description"
+            rows="3"
+            placeholder="Décrivez brièvement l'hébergement..."></textarea>
+        </div>
+
+        <button type="submit" class="submit-btn">
+          ✅ Ajouter l'hébergement
+        </button>
+      </form>
+    </div>
+
+    <!-- Statistiques -->
+    <div class="stats-section">
+      <div class="stat-card">
+        <div class="stat-icon">🏠</div>
+        <div class="stat-content">
+          <h3>{{ filteredAccommodations.length }}</h3>
+          <p>Hébergement(s) trouvé(s)</p>
+        </div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-icon">🛏️</div>
+        <div class="stat-content">
+          <h3>{{ getTotalAvailableSpots() }}</h3>
+          <p>Place(s) disponible(s)</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Liste des hébergements -->
+    <div class="accommodations-grid">
+      <div 
+        *ngFor="let accommodation of filteredAccommodations" 
+        class="accommodation-card"
+        [class.full]="accommodation.availableSpots === 0">
+        
+        <!-- Badge de disponibilité -->
+        <div class="availability-badge" [ngClass]="getAvailabilityClass(accommodation)">
+          {{ getAvailabilityText(accommodation) }}
+        </div>
+
+        <!-- Contenu de la carte -->
+        <div class="card-header">
+          <h3>{{ accommodation.name }}</h3>
+          <span class="city-badge">📍 {{ accommodation.city }}</span>
+        </div>
+
+        <div class="card-body">
+          <div class="info-item">
+            <span class="icon">📍</span>
+            <span>{{ accommodation.address }}</span>
+          </div>
+
+          <div class="info-item">
+            <span class="icon">👥</span>
+            <span>{{ accommodation.availableSpots }} / {{ accommodation.totalSpots }} places</span>
+          </div>
+
+          <p class="description" *ngIf="accommodation.description">
+            {{ accommodation.description }}
+          </p>
+
+          <div class="progress-bar">
+            <div 
+              class="progress-fill" 
+              [style.width.%]="(accommodation.availableSpots / accommodation.totalSpots) * 100"
+              [ngClass]="getAvailabilityClass(accommodation)">
+            </div>
+          </div>
+        </div>
+
+        <div class="card-footer">
+          <button 
+            class="contact-btn" 
+            (click)="contactAccommodation(accommodation)"
+            [disabled]="accommodation.availableSpots === 0">
+            <span *ngIf="accommodation.availableSpots > 0">📧 Contacter</span>
+            <span *ngIf="accommodation.availableSpots === 0">❌ Complet</span>
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Message si aucun hébergement -->
+    <div *ngIf="filteredAccommodations.length === 0" class="no-results">
+      <div class="no-results-icon">🏚️</div>
+      <h3>Aucun hébergement trouvé</h3>
+      <p>Essayez de modifier vos critères de recherche</p>
+    </div>
+
+  </div>
+</div>

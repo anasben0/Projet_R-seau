@@ -20,7 +20,7 @@
       <nav>
         <a [routerLink]="['/dashboard']" class="nav-item" routerLinkActive="active" [routerLinkActiveOptions]="{exact: true}">📍 Carte des événements</a>
         <a [routerLink]="['/events']" class="nav-item" routerLinkActive="active">📅 Mes événements</a>
-        <a href="#" class="nav-item">🏠 Hébergements</a>
+        <a [routerLink]="['/accommodations']" class="nav-item" routerLinkActive="active">🏠 Hébergements</a>
         <a href="#" class="nav-item" *ngIf="user?.role === 'admin'">⚙️ Administration</a>
       </nav>
     </div>
@@ -34,18 +34,6 @@
       <!-- Carte de la France avec Leaflet -->
       <div class="map-container">
         <div id="map" class="leaflet-map"></div>
-      </div>
-
-      <!-- Liste des événements -->
-      <div class="events-list">
-        <h3>Événements à venir</h3>
-        <div class="event-card">
-          <div class="event-icon">🎓</div>
-          <div class="event-details">
-            <h4>Conférence Tech Lyon</h4>
-            <p>📍 Lyon • 📅 15 Décembre 2025</p>
-          </div>
-        </div>
       </div>
     </main>
   </div>

@@ -24,17 +24,22 @@ export class LoginComponent implements OnInit {
   ) {}
 
   ngOnInit(): void {
-    // Si déjà connecté, rediriger vers le dashboard
-    if (this.authService.isAuthenticated()) {
-      this.router.navigate(['/dashboard']);
-      return;
-    }
-
+    // Initialiser le formulaire d'abord
     this.loginForm = this.fb.group({
       email: ['', [Validators.required, Validators.email]],
       password: ['', [Validators.required, Validators.minLength(6)]],
       remember: [false]
     });
+
+    // Ne rien faire de spécial si l'utilisateur est déjà connecté
+    // Laisser l'utilisateur se déconnecter ou se reconnecter avec un autre compte
+  }
+
+  logout(): void {
+    this.authService.logout();
+    this.successMessage = '';
+    this.errorMessage = '';
+    this.loginForm.reset();
   }
 
   onSubmit(): void {

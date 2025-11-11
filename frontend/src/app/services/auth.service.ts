@@ -9,13 +9,18 @@ import { AuthResponse, LoginRequest, RegisterRequest, User } from '../models/use
 })
 export class AuthService {
   private apiUrl = 'http://localhost:8080/api/auth';
-  private currentUserSubject = new BehaviorSubject<User | null>(this.getUserFromStorage());
-  public currentUser$ = this.currentUserSubject.asObservable();
+  private currentUserSubject: BehaviorSubject<User | null>;
+  public currentUser$: Observable<User | null>;
 
   constructor(
     private http: HttpClient,
     @Inject(PLATFORM_ID) private platformId: Object
-  ) {}
+  ) {
+    // Initialiser après l'injection de platformId
+    this.currentUserSubject = new BehaviorSubject<User | null>(this.getUserFromStorage());
+    this.currentUser$ = this.currentUserSubject.asObservable();
+    console.log('AuthService - Constructor - User loaded:', this.currentUserSubject.value);
+  }
 
   /**
    * Connexion utilisateur
@@ -57,7 +62,26 @@ export class AuthService {
    * Vérifier si l'utilisateur est connecté
    */
   isAuthenticated(): boolean {
-    return this.currentUserSubject.value !== null;
+    // D'abord vérifier si l'utilisateur est en mémoire
+    let isAuth = this.currentUserSubject.value !== null;
+    console.log('AuthService - isAuthenticated (memory):', isAuth);
+    console.log('AuthService - currentUser:', this.currentUserSubject.value);
+    
+    // Si pas en mémoire ET on est côté browser, recharger depuis localStorage
+    if (!isAuth && isPlatformBrowser(this.platformId)) {
+      const userFromStorage = this.getUserFromStorage();
+      console.log('AuthService - userFromStorage:', userFromStorage);
+      
+      if (userFromStorage) {
+        // Restaurer l'utilisateur en mémoire
+        this.currentUserSubject.next(userFromStorage);
+        console.log('AuthService - User restored from storage');
+        return true;
+      }
+    }
+    
+    console.log('AuthService - Final isAuthenticated:', isAuth);
+    return isAuth;
   }
 
   /**
