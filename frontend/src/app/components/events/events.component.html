@@ -1,0 +1,79 @@
+<div class="events-container">
+  <!-- Header -->
+  <div class="events-header">
+    <div class="header-content">
+      <button class="back-btn" (click)="goToDashboard()">
+        ← Retour à la CaRRte
+      </button>
+      <h1>📅 Planning Events RRezo</h1>
+    </div>
+  </div>
+
+  <!-- Main Content -->
+  <div class="events-content">
+    <!-- Filtres par mois -->
+    <div class="filters-section">
+      <h2>Filtrer par mois</h2>
+      <div class="month-filters">
+        <button 
+          *ngFor="let month of months" 
+          class="filter-btn"
+          [class.active]="selectedMonth === month"
+          (click)="filterByMonth(month)">
+          {{ month }}
+        </button>
+      </div>
+    </div>
+
+    <!-- Compteur d'événements -->
+    <div class="events-stats">
+      <p>
+        <strong>{{ filteredEvents.length }}</strong> événement(s) 
+        <span *ngIf="selectedMonth !== 'Tous'">en {{ selectedMonth }}</span>
+      </p>
+    </div>
+
+    <!-- Liste des événements -->
+    <div class="events-grid">
+      <div 
+        *ngFor="let event of filteredEvents" 
+        class="event-card"
+        [style.border-left-color]="event.color"
+        (click)="viewEventDetails(event)">
+        
+        <!-- Badge de couleur -->
+        <div class="event-color-badge" [style.background-color]="event.color"></div>
+        
+        <!-- Contenu de la carte -->
+        <div class="event-content">
+          <div class="event-header-row">
+            <h3 class="event-name">{{ event.name }}</h3>
+            <span class="event-month">{{ event.month }}</span>
+          </div>
+          
+          <div class="event-details">
+            <div class="event-info">
+              <span class="icon">📍</span>
+              <span>{{ event.location }}</span>
+            </div>
+            <div class="event-info">
+              <span class="icon">📆</span>
+              <span>{{ event.dates }} {{ event.month }}</span>
+            </div>
+          </div>
+          
+          <p class="event-description">{{ event.description }}</p>
+          
+          <button class="view-btn">
+            Voir les détails →
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Message si aucun événement -->
+    <div *ngIf="filteredEvents.length === 0" class="no-events">
+      <p>😔 Aucun événement trouvé pour ce mois</p>
+    </div>
+  </div>
+</div>

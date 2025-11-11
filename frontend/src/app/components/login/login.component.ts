@@ -51,18 +51,26 @@ export class LoginComponent implements OnInit {
 
     this.authService.login({ email, password }).subscribe({
       next: (response) => {
+        console.log('🔵 Réponse reçue du backend:', response);
+        console.log('🔵 response.success =', response.success);
+        console.log('🔵 response.user =', response.user);
+        
         if (response.success && response.user) {
+          console.log('✅ Connexion réussie, redirection vers dashboard');
           this.successMessage = 'Connexion réussie ! Redirection...';
           setTimeout(() => {
             this.router.navigate(['/dashboard']);
           }, 800);
         } else {
+          console.log('❌ Connexion échouée:', response.message);
           this.errorMessage = response.message || 'Email ou mot de passe incorrect.';
           this.loading = false;
         }
       },
       error: (error) => {
-        console.error('Erreur de connexion:', error);
+        console.error('❌ Erreur HTTP de connexion:', error);
+        console.error('❌ Status:', error.status);
+        console.error('❌ Message:', error.message);
         this.errorMessage = 'Email ou mot de passe incorrect.';
         this.loading = false;
       }

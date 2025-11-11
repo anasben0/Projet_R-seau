@@ -1,4 +1,5 @@
-import { Injectable } from '@angular/core';
+import { Injectable, PLATFORM_ID, Inject } from '@angular/core';
+import { isPlatformBrowser } from '@angular/common';
 import { HttpClient } from '@angular/common/http';
 import { Observable, BehaviorSubject, tap } from 'rxjs';
 import { AuthResponse, LoginRequest, RegisterRequest, User } from '../models/user.model';
@@ -11,7 +12,10 @@ export class AuthService {
   private currentUserSubject = new BehaviorSubject<User | null>(this.getUserFromStorage());
   public currentUser$ = this.currentUserSubject.asObservable();
 
-  constructor(private http: HttpClient) {}
+  constructor(
+    private http: HttpClient,
+    @Inject(PLATFORM_ID) private platformId: Object
+  ) {}
 
   /**
    * Connexion utilisateur
@@ -43,7 +47,9 @@ export class AuthService {
    * Déconnexion
    */
   logout(): void {
-    localStorage.removeItem('polytech_user');
+    if (isPlatformBrowser(this.platformId)) {
+      localStorage.removeItem('polytech_user');
+    }
     this.currentUserSubject.next(null);
   }
 
@@ -73,7 +79,9 @@ export class AuthService {
    * Sauvegarder l'utilisateur dans localStorage
    */
   private saveUser(user: User): void {
-    localStorage.setItem('polytech_user', JSON.stringify(user));
+    if (isPlatformBrowser(this.platformId)) {
+      localStorage.setItem('polytech_user', JSON.stringify(user));
+    }
     this.currentUserSubject.next(user);
   }
 
@@ -81,7 +89,10 @@ export class AuthService {
    * Récupérer l'utilisateur depuis localStorage
    */
   private getUserFromStorage(): User | null {
-    const userJson = localStorage.getItem('polytech_user');
-    return userJson ? JSON.parse(userJson) : null;
+    if (isPlatformBrowser(this.platformId)) {
+      const userJson = localStorage.getItem('polytech_user');
+      return userJson ? JSON.parse(userJson) : null;
+    }
+    return null;
   }
 }

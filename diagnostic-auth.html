@@ -1,0 +1,205 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Nettoyage + Test Login</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 50px auto;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        .container {
+            background: white;
+            padding: 30px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        button {
+            padding: 10px 20px;
+            margin: 5px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
+        }
+        .btn-danger {
+            background: #dc3545;
+            color: white;
+        }
+        .btn-info {
+            background: #17a2b8;
+            color: white;
+        }
+        .btn-success {
+            background: #28a745;
+            color: white;
+        }
+        .result {
+            margin-top: 20px;
+            padding: 15px;
+            border-radius: 4px;
+            white-space: pre-wrap;
+            font-family: monospace;
+        }
+        .info {
+            background: #d1ecf1;
+            border: 1px solid #bee5eb;
+            color: #0c5460;
+        }
+        .warning {
+            background: #fff3cd;
+            border: 1px solid #ffeeba;
+            color: #856404;
+        }
+        .form-group {
+            margin: 15px 0;
+        }
+        input {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            box-sizing: border-box;
+            margin-top: 5px;
+        }
+        label {
+            font-weight: bold;
+            display: block;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔧 Diagnostic + Test d'authentification</h1>
+        
+        <h2>1. État actuel du localStorage</h2>
+        <button class="btn-info" onclick="checkLocalStorage()">Vérifier localStorage</button>
+        <button class="btn-danger" onclick="clearStorage()">Nettoyer localStorage</button>
+        <div id="storageResult" class="result info" style="display:none;"></div>
+        
+        <hr>
+        
+        <h2>2. Test avec BON mot de passe</h2>
+        <div class="form-group">
+            <label>Email:</label>
+            <input type="email" id="goodEmail" value="dev@polyrezo.com">
+        </div>
+        <div class="form-group">
+            <label>Mot de passe:</label>
+            <input type="password" id="goodPassword" value="dev123">
+        </div>
+        <button class="btn-success" onclick="testGoodLogin()">Tester BON mot de passe</button>
+        <div id="goodResult" class="result" style="display:none;"></div>
+        
+        <hr>
+        
+        <h2>3. Test avec MAUVAIS mot de passe</h2>
+        <div class="form-group">
+            <label>Email:</label>
+            <input type="email" id="badEmail" value="dev@polyrezo.com">
+        </div>
+        <div class="form-group">
+            <label>Mot de passe:</label>
+            <input type="password" id="badPassword" value="wrongpassword">
+        </div>
+        <button class="btn-danger" onclick="testBadLogin()">Tester MAUVAIS mot de passe</button>
+        <div id="badResult" class="result" style="display:none;"></div>
+    </div>
+
+    <script>
+        const API_URL = 'http://localhost:8080/api/auth/login';
+        
+        function checkLocalStorage() {
+            const result = document.getElementById('storageResult');
+            const user = localStorage.getItem('polytech_user');
+            
+            result.style.display = 'block';
+            
+            if (user) {
+                const userData = JSON.parse(user);
+                result.className = 'result warning';
+                result.textContent = `⚠️ ATTENTION: Un utilisateur est stocké dans localStorage!\n\n${JSON.stringify(userData, null, 2)}\n\nCela pourrait permettre d'accéder au dashboard sans vraie authentification.`;
+            } else {
+                result.className = 'result info';
+                result.textContent = '✅ localStorage vide - pas d\'utilisateur stocké.';
+            }
+        }
+        
+        function clearStorage() {
+            localStorage.removeItem('polytech_user');
+            const result = document.getElementById('storageResult');
+            result.style.display = 'block';
+            result.className = 'result info';
+            result.textContent = '✅ localStorage nettoyé avec succès!';
+        }
+        
+        async function testGoodLogin() {
+            const email = document.getElementById('goodEmail').value;
+            const password = document.getElementById('goodPassword').value;
+            const result = document.getElementById('goodResult');
+            
+            result.style.display = 'block';
+            result.textContent = '⏳ Test en cours...';
+            
+            try {
+                const response = await fetch(API_URL, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ email, password })
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    result.className = 'result info';
+                    result.textContent = `✅ CORRECT: Connexion réussie!\n\nRéponse:\n${JSON.stringify(data, null, 2)}`;
+                } else {
+                    result.className = 'result warning';
+                    result.textContent = `❌ PROBLÈME: Le backend rejette un BON mot de passe!\n\nRéponse:\n${JSON.stringify(data, null, 2)}`;
+                }
+            } catch (error) {
+                result.className = 'result warning';
+                result.textContent = `❌ ERREUR: ${error.message}`;
+            }
+        }
+        
+        async function testBadLogin() {
+            const email = document.getElementById('badEmail').value;
+            const password = document.getElementById('badPassword').value;
+            const result = document.getElementById('badResult');
+            
+            result.style.display = 'block';
+            result.textContent = '⏳ Test en cours...';
+            
+            try {
+                const response = await fetch(API_URL, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ email, password })
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    result.className = 'result warning';
+                    result.textContent = `❌ PROBLÈME CRITIQUE: Le backend accepte un MAUVAIS mot de passe!\n\nRéponse:\n${JSON.stringify(data, null, 2)}`;
+                } else {
+                    result.className = 'result info';
+                    result.textContent = `✅ CORRECT: Le backend rejette le mauvais mot de passe!\n\nRéponse:\n${JSON.stringify(data, null, 2)}`;
+                }
+            } catch (error) {
+                // Une erreur 401 est attendue
+                result.className = 'result info';
+                result.textContent = `✅ CORRECT: Le backend rejette le mauvais mot de passe (erreur 401)`;
+            }
+        }
+        
+        // Vérifier automatiquement au chargement
+        window.addEventListener('load', checkLocalStorage);
+    </script>
+</body>
+</html>
