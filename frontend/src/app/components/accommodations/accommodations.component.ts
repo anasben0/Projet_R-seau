@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
@@ -24,20 +24,20 @@ export class AccommodationsComponent implements OnInit {
   showAddForm: boolean = false;
   isAdmin: boolean = false;
   newAccommodation = {
-    name: '',
+    title: '',
     address: '',
     city: '',
-    availableSpots: 1,
-    totalSpots: 1,
-    description: '',
-    contactEmail: ''
+    capacity: 1,
+    contact: '',
+    eventId: ''  // Sera rempli avec le premier événement
   };
 
   constructor(
     private accommodationService: AccommodationService,
     private authService: AuthService,
     private eventsService: EventsService,
-    private router: Router
+    private router: Router,
+    private cdr: ChangeDetectorRef
   ) {}
 
   ngOnInit(): void {
@@ -45,14 +45,31 @@ export class AccommodationsComponent implements OnInit {
     console.log('AccommodationsComponent - User authenticated:', this.authService.isAuthenticated());
     console.log('AccommodationsComponent - Current user:', this.authService.getCurrentUser());
     
-    this.loadAccommodations();
     this.checkAdminStatus();
-    this.loadAvailableCities();
+    this.loadAccommodations();
   }
 
   loadAccommodations(): void {
-    this.accommodations = this.accommodationService.getAllAccommodations();
-    this.filteredAccommodations = this.accommodations;
+    console.log('Loading accommodations from backend...');
+    this.accommodationService.getAllAccommodations().subscribe({
+      next: (accommodations) => {
+        console.log('Accommodations received from backend:', accommodations);
+        this.accommodations = [...accommodations]; // Créer une nouvelle référence
+        this.loadAvailableCities();
+        // Réappliquer les filtres après le chargement
+        this.applyFilters();
+        console.log('Accommodations loaded and filtered:', this.filteredAccommodations.length);
+        console.log('Filtered accommodations:', this.filteredAccommodations);
+        // Forcer la détection des changements
+        this.cdr.detectChanges();
+      },
+      error: (error) => {
+        console.error('Error loading accommodations:', error);
+        alert('❌ Erreur lors du chargement des hébergements');
+        this.accommodations = [];
+        this.filteredAccommodations = [];
+      }
+    });
   }
 
   loadAvailableCities(): void {
@@ -60,8 +77,8 @@ export class AccommodationsComponent implements OnInit {
     const events = this.eventsService.getAllEvents();
     const eventCities = [...new Set(events.map(e => e.location))];
     
-    // Récupérer les villes avec des hébergements
-    const accommodationCities = this.accommodationService.getAvailableCities();
+    // Récupérer les villes avec des hébergements directement depuis le tableau
+    const accommodationCities = [...new Set(this.accommodations.map(acc => acc.city))];
     
     // Combiner et dédupliquer
     this.availableCities = ['Toutes', ...new Set([...eventCities, ...accommodationCities])].sort();
@@ -82,7 +99,7 @@ export class AccommodationsComponent implements OnInit {
   }
 
   applyFilters(): void {
-    let filtered = this.accommodations;
+    let filtered = [...this.accommodations]; // Créer une copie
 
     // Filtre par ville
     if (this.selectedCity !== 'Toutes') {
@@ -93,13 +110,14 @@ export class AccommodationsComponent implements OnInit {
     if (this.searchQuery.trim()) {
       const query = this.searchQuery.toLowerCase();
       filtered = filtered.filter(acc =>
-        acc.name.toLowerCase().includes(query) ||
+        acc.title.toLowerCase().includes(query) ||
         acc.address.toLowerCase().includes(query) ||
         acc.city.toLowerCase().includes(query)
       );
     }
 
-    this.filteredAccommodations = filtered;
+    this.filteredAccommodations = [...filtered]; // Nouvelle référence pour forcer le re-render
+    console.log('Filters applied. Results:', this.filteredAccommodations.length);
   }
 
   toggleAddForm(): void {
@@ -111,24 +129,41 @@ export class AccommodationsComponent implements OnInit {
 
   addAccommodation(): void {
     if (this.validateForm()) {
-      const accommodation = this.accommodationService.addAccommodation({
-        ...this.newAccommodation,
-        totalSpots: Number(this.newAccommodation.totalSpots),
-        availableSpots: Number(this.newAccommodation.availableSpots)
+      const user = this.authService.getCurrentUser();
+      if (!user) {
+        alert('❌ Vous devez être connecté pour ajouter un hébergement');
+        return;
+      }
+
+      // UUID de l'événement "Hébergements Polytech - Général" créé dans la base de données
+      const generalEventId = '76d5acce-1e33-471d-8556-dcdb8ff85e19';
+
+      const accommodationData = {
+        eventId: generalEventId,
+        title: this.newAccommodation.title,
+        address: `${this.newAccommodation.address}, ${this.newAccommodation.city}`,
+        contact: this.newAccommodation.contact,
+        capacity: Number(this.newAccommodation.capacity)
+      };
+
+      this.accommodationService.addAccommodation(user.id, accommodationData).subscribe({
+        next: (accommodation) => {
+          alert(`✅ Hébergement "${accommodation.title}" ajouté avec succès !`);
+          this.loadAccommodations();
+          this.resetForm();
+          this.showAddForm = false;
+        },
+        error: (error) => {
+          console.error('Error adding accommodation:', error);
+          alert(`❌ Erreur lors de l'ajout de l'hébergement: ${error.error?.message || error.message}`);
+        }
       });
-      
-      this.loadAccommodations();
-      this.applyFilters();
-      this.resetForm();
-      this.showAddForm = false;
-      
-      alert(`✅ Hébergement "${accommodation.name}" ajouté avec succès !`);
     }
   }
 
   validateForm(): boolean {
-    if (!this.newAccommodation.name.trim()) {
-      alert('❌ Le nom est requis');
+    if (!this.newAccommodation.title.trim()) {
+      alert('❌ Le titre est requis');
       return false;
     }
     if (!this.newAccommodation.address.trim()) {
@@ -139,16 +174,8 @@ export class AccommodationsComponent implements OnInit {
       alert('❌ La ville est requise');
       return false;
     }
-    if (this.newAccommodation.totalSpots < 1) {
-      alert('❌ Le nombre total de places doit être supérieur à 0');
-      return false;
-    }
-    if (this.newAccommodation.availableSpots < 0) {
-      alert('❌ Le nombre de places disponibles ne peut pas être négatif');
-      return false;
-    }
-    if (this.newAccommodation.availableSpots > this.newAccommodation.totalSpots) {
-      alert('❌ Le nombre de places disponibles ne peut pas dépasser le total');
+    if (this.newAccommodation.capacity < 1) {
+      alert('❌ La capacité doit être au moins 1');
       return false;
     }
     return true;
@@ -156,13 +183,12 @@ export class AccommodationsComponent implements OnInit {
 
   resetForm(): void {
     this.newAccommodation = {
-      name: '',
+      title: '',
       address: '',
       city: '',
-      availableSpots: 1,
-      totalSpots: 1,
-      description: '',
-      contactEmail: ''
+      capacity: 1,
+      contact: '',
+      eventId: ''
     };
   }
 
@@ -171,15 +197,21 @@ export class AccommodationsComponent implements OnInit {
   }
 
   contactAccommodation(accommodation: Accommodation): void {
-    if (accommodation.contactEmail) {
-      window.location.href = `mailto:${accommodation.contactEmail}?subject=Demande d'hébergement - ${accommodation.name}`;
+    if (accommodation.contact) {
+      // Si c'est un email, ouvrir mailto
+      if (accommodation.contact.includes('@')) {
+        window.location.href = `mailto:${accommodation.contact}?subject=Demande d'hébergement - ${accommodation.title}`;
+      } else {
+        // Sinon afficher le numéro de téléphone
+        alert(`📞 Contact: ${accommodation.contact}`);
+      }
     } else {
-      alert('📧 Aucun email de contact disponible pour cet hébergement');
+      alert('📧 Aucun contact disponible pour cet hébergement');
     }
   }
 
   getAvailabilityClass(accommodation: Accommodation): string {
-    const ratio = accommodation.availableSpots / accommodation.totalSpots;
+    const ratio = accommodation.availableSpots / accommodation.capacity;
     if (accommodation.availableSpots === 0) return 'full';
     if (ratio < 0.3) return 'low';
     return 'available';

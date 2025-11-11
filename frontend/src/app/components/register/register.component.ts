@@ -50,8 +50,10 @@ export class RegisterComponent implements OnInit {
   }
 
   loadSchools(): void {
+    console.log('Loading schools from backend...');
     this.schoolService.getAllSchools().subscribe({
       next: (schools) => {
+        console.log('Schools loaded:', schools.length);
         this.schools = schools;
         this.loadingSchools = false;
       },
@@ -88,11 +90,15 @@ export class RegisterComponent implements OnInit {
     this.successMessage = '';
 
     const { confirmPassword, ...registerData } = this.registerForm.value;
+    
+    console.log('Submitting registration:', { ...registerData, password: '***' });
 
     this.authService.register(registerData).subscribe({
       next: (response) => {
+        console.log('Registration response:', response);
         if (response.success && response.user) {
           this.successMessage = 'Inscription réussie ! Redirection...';
+          console.log('User registered successfully:', response.user);
           setTimeout(() => {
             this.router.navigate(['/dashboard']);
           }, 800);
@@ -103,7 +109,7 @@ export class RegisterComponent implements OnInit {
       },
       error: (error) => {
         console.error('Erreur inscription:', error);
-        this.errorMessage = error.error?.message || 'Erreur lors de l\'inscription.';
+        this.errorMessage = error.error?.message || error.message || 'Erreur lors de l\'inscription.';
         this.loading = false;
       }
     });

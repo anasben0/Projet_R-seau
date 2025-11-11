@@ -1,45 +1,66 @@
 package com.anasvalisoa.backend.service;
 
+import java.time.Instant;
+import java.util.Optional;
+import java.util.UUID;
+
+import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
 import com.anasvalisoa.backend.dto.auth.AuthResponse;
 import com.anasvalisoa.backend.dto.auth.LoginRequest;
 import com.anasvalisoa.backend.dto.auth.RegisterRequest;
-import com.anasvalisoa.backend.entity.Role;
 import com.anasvalisoa.backend.entity.User;
 import com.anasvalisoa.backend.repository.UserRepository;
-import org.springframework.security.crypto.password.PasswordEncoder;
-import org.springframework.stereotype.Service;
 
-import java.util.Optional;
+import jakarta.persistence.EntityManager;
+import jakarta.persistence.PersistenceContext;
 
 @Service
 public class AuthService {
 
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
+    
+    @PersistenceContext
+    private EntityManager entityManager;
 
     public AuthService(UserRepository userRepository, PasswordEncoder passwordEncoder) {
         this.userRepository = userRepository;
         this.passwordEncoder = passwordEncoder;
     }
 
+    @Transactional
     public AuthResponse register(RegisterRequest request) {
         // Vérifier si l'email existe déjà
         if (userRepository.existsByEmail(request.getEmail())) {
             return new AuthResponse(false, "Cet email est déjà utilisé");
         }
 
-        // Créer le nouvel utilisateur
-        User user = new User();
-        user.setFirstName(request.getFirstName());
-        user.setLastName(request.getLastName());
-        user.setEmail(request.getEmail());
-        user.setPhone(request.getPhone());
-        user.setSchoolId(request.getSchoolId());
-        user.setRole(Role.member); // Par défaut, tous les nouveaux utilisateurs sont "member"
-        user.setPasswordHash(passwordEncoder.encode(request.getPassword()));
-
-        // Sauvegarder l'utilisateur
-        User savedUser = userRepository.save(user);
+        // Générer un UUID pour le nouvel utilisateur
+        UUID userId = UUID.randomUUID();
+        Instant now = Instant.now();
+        String hashedPassword = passwordEncoder.encode(request.getPassword());
+        
+        // Insérer directement avec SQL natif pour éviter les problèmes d'enum
+        String sql = "INSERT INTO users (id, school_id, role, first_name, last_name, phone, email, password_hash, created_at) " +
+                     "VALUES (:id, :schoolId, CAST(:role AS user_role), :firstName, :lastName, :phone, :email, :passwordHash, :createdAt)";
+        
+        entityManager.createNativeQuery(sql)
+            .setParameter("id", userId)
+            .setParameter("schoolId", request.getSchoolId())
+            .setParameter("role", "member")
+            .setParameter("firstName", request.getFirstName())
+            .setParameter("lastName", request.getLastName())
+            .setParameter("phone", request.getPhone())
+            .setParameter("email", request.getEmail())
+            .setParameter("passwordHash", hashedPassword)
+            .setParameter("createdAt", now)
+            .executeUpdate();
+        
+        // Récupérer l'utilisateur créé
+        User savedUser = userRepository.findById(userId).orElseThrow();
 
         // Créer les données utilisateur pour la réponse (sans le mot de passe)
         AuthResponse.UserData userData = new AuthResponse.UserData(

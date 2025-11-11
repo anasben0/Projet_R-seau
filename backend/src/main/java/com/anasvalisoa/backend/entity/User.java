@@ -1,9 +1,18 @@
 package com.anasvalisoa.backend.entity;
 
-import jakarta.persistence.*;
-import org.hibernate.annotations.UuidGenerator;
 import java.time.Instant;
 import java.util.UUID;
+
+import org.hibernate.annotations.UuidGenerator;
+
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.Id;
+import jakarta.persistence.PrePersist;
+import jakarta.persistence.Table;
 
 @Entity
 @Table(name = "users")
@@ -18,7 +27,7 @@ public class User {
     private UUID schoolId;
 
     @Enumerated(EnumType.STRING)
-    @Column(nullable = false)
+    @Column(name = "role", nullable = false)
     private Role role;
 
     @Column(name = "first_name", nullable = false)
@@ -36,7 +45,14 @@ public class User {
     private String passwordHash;
 
     @Column(name = "created_at", nullable = false)
-    private Instant createdAt = Instant.now();
+    private Instant createdAt;
+
+    @PrePersist
+    protected void onCreate() {
+        if (createdAt == null) {
+            createdAt = Instant.now();
+        }
+    }
 
     // Getters et setters
     public UUID getId() { return id; }

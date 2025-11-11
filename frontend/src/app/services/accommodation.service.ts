@@ -1,79 +1,148 @@
 import { Injectable } from '@angular/core';
+import { HttpClient } from '@angular/common/http';
+import { Observable } from 'rxjs';
+import { map } from 'rxjs/operators';
 
 export interface Accommodation {
-  id: number;
-  name: string;
+  id: string;  // UUID du backend
+  eventId?: string;
+  eventName?: string;
+  hostId?: string;
+  hostName?: string;
+  title: string;  // Backend utilise "title" au lieu de "name"
   address: string;
-  city: string;
+  city: string;  // Sera extrait de l'adresse ou ajouté manuellement
+  contact?: string;  // Backend utilise "contact" au lieu de "contactEmail"
+  capacity: number;  // Backend utilise "capacity" au lieu de "totalSpots"
   availableSpots: number;
-  totalSpots: number;
+  acceptedGuests?: number;
   description?: string;
-  contactEmail?: string;
-  imageUrl?: string;
+  createdAt?: string;
+}
+
+export interface AccommodationCreateRequest {
+  eventId: string;
+  title: string;
+  address: string;
+  contact?: string;
+  capacity: number;
 }
 
 @Injectable({
   providedIn: 'root'
 })
 export class AccommodationService {
-  private accommodations: Accommodation[] = [
-    // Exemples d'hébergements
-    { id: 1, name: 'Résidence Polytech Lyon', address: '15 Rue de la République', city: 'Lyon', availableSpots: 3, totalSpots: 10, description: 'Appartement T3 proche du campus', contactEmail: 'contact@polylyon.fr' },
-    { id: 2, name: 'Studio Centre Paris', address: '8 Avenue des Champs', city: 'Paris', availableSpots: 1, totalSpots: 2, description: 'Studio confortable en centre-ville', contactEmail: 'paris@polytech.fr' },
-    { id: 3, name: 'Colocation Saclay', address: '22 Rue du Campus', city: 'Saclay', availableSpots: 2, totalSpots: 5, description: 'Colocation étudiante', contactEmail: 'saclay@polytech.fr' },
-    { id: 4, name: 'Appartement Lille Centre', address: '10 Place du Théâtre', city: 'Lille', availableSpots: 4, totalSpots: 6, description: 'Grand appartement partagé', contactEmail: 'lille@polytech.fr' },
-    { id: 5, name: 'Logement Marseille Vieux Port', address: '5 Quai du Port', city: 'Marseille', availableSpots: 0, totalSpots: 4, description: 'Vue sur le Vieux Port', contactEmail: 'marseille@polytech.fr' },
-    { id: 6, name: 'Studio Nantes', address: '12 Rue Crébillon', city: 'Nantes', availableSpots: 1, totalSpots: 1, description: 'Petit studio cosy', contactEmail: 'nantes@polytech.fr' },
-    { id: 7, name: 'Résidence Grenoble', address: '30 Avenue Alsace-Lorraine', city: 'Grenoble', availableSpots: 5, totalSpots: 8, description: 'Proche des montagnes', contactEmail: 'grenoble@polytech.fr' },
-    { id: 8, name: 'Appartement Tours', address: '7 Rue Nationale', city: 'Tours', availableSpots: 2, totalSpots: 3, description: 'Centre historique', contactEmail: 'tours@polytech.fr' }
-  ];
+  private apiUrl = 'http://localhost:8080/api/accommodations';
 
-  constructor() { }
+  constructor(private http: HttpClient) { }
 
-  getAllAccommodations(): Accommodation[] {
-    return this.accommodations;
+  /**
+   * Récupérer tous les hébergements
+   */
+  getAllAccommodations(): Observable<Accommodation[]> {
+    return this.http.get<Accommodation[]>(this.apiUrl).pipe(
+      map(accommodations => accommodations.map(acc => this.enrichAccommodation(acc)))
+    );
   }
 
-  getAccommodationById(id: number): Accommodation | undefined {
-    return this.accommodations.find(acc => acc.id === id);
+  /**
+   * Récupérer un hébergement par ID
+   */
+  getAccommodationById(id: string): Observable<Accommodation> {
+    return this.http.get<Accommodation>(`${this.apiUrl}/${id}`).pipe(
+      map(acc => this.enrichAccommodation(acc))
+    );
   }
 
-  getAccommodationsByCity(city: string): Accommodation[] {
-    return this.accommodations.filter(acc => 
+  /**
+   * Récupérer les hébergements d'un événement
+   */
+  getAccommodationsByEvent(eventId: string): Observable<Accommodation[]> {
+    return this.http.get<Accommodation[]>(`${this.apiUrl}/event/${eventId}`).pipe(
+      map(accommodations => accommodations.map(acc => this.enrichAccommodation(acc)))
+    );
+  }
+
+  /**
+   * Filtrer les hébergements par ville (côté client)
+   */
+  getAccommodationsByCity(accommodations: Accommodation[], city: string): Accommodation[] {
+    return accommodations.filter(acc => 
       acc.city.toLowerCase() === city.toLowerCase()
     );
   }
 
-  getAvailableCities(): string[] {
-    const cities = [...new Set(this.accommodations.map(acc => acc.city))];
+  /**
+   * Récupérer les villes disponibles
+   */
+  getAvailableCities(accommodations: Accommodation[]): string[] {
+    const cities = [...new Set(accommodations.map(acc => acc.city))];
     return cities.sort();
   }
 
-  addAccommodation(accommodation: Omit<Accommodation, 'id'>): Accommodation {
-    const newId = Math.max(...this.accommodations.map(a => a.id), 0) + 1;
-    const newAccommodation: Accommodation = {
-      ...accommodation,
-      id: newId
-    };
-    this.accommodations.push(newAccommodation);
-    return newAccommodation;
+  /**
+   * Créer un nouvel hébergement
+   */
+  addAccommodation(hostId: string, accommodation: AccommodationCreateRequest): Observable<Accommodation> {
+    return this.http.post<Accommodation>(
+      `${this.apiUrl}?hostId=${hostId}`, 
+      accommodation
+    ).pipe(
+      map(acc => this.enrichAccommodation(acc))
+    );
   }
 
-  updateAccommodation(id: number, updates: Partial<Accommodation>): boolean {
-    const index = this.accommodations.findIndex(acc => acc.id === id);
-    if (index !== -1) {
-      this.accommodations[index] = { ...this.accommodations[index], ...updates };
-      return true;
-    }
-    return false;
+  /**
+   * Mettre à jour un hébergement
+   */
+  updateAccommodation(id: string, hostId: string, updates: Partial<AccommodationCreateRequest>): Observable<Accommodation> {
+    return this.http.put<Accommodation>(
+      `${this.apiUrl}/${id}?hostId=${hostId}`, 
+      updates
+    ).pipe(
+      map(acc => this.enrichAccommodation(acc))
+    );
   }
 
-  deleteAccommodation(id: number): boolean {
-    const index = this.accommodations.findIndex(acc => acc.id === id);
-    if (index !== -1) {
-      this.accommodations.splice(index, 1);
-      return true;
+  /**
+   * Supprimer un hébergement
+   */
+  deleteAccommodation(id: string, hostId: string): Observable<void> {
+    return this.http.delete<void>(`${this.apiUrl}/${id}?hostId=${hostId}`);
+  }
+
+  /**
+   * Enrichir un hébergement avec la ville extraite de l'adresse
+   */
+  private enrichAccommodation(acc: Accommodation): Accommodation {
+    // Si la ville n'est pas définie, essayer de l'extraire de l'adresse
+    if (!acc.city && acc.address) {
+      acc.city = this.extractCityFromAddress(acc.address);
     }
-    return false;
+    return acc;
+  }
+
+  /**
+   * Extraire la ville d'une adresse (basique)
+   */
+  private extractCityFromAddress(address: string): string {
+    // Format typique: "15 rue de la République, Lyon" ou "Lyon" en fin d'adresse
+    const parts = address.split(',');
+    if (parts.length > 1) {
+      return parts[parts.length - 1].trim();
+    }
+    
+    // Villes connues de Polytech
+    const knownCities = ['Lyon', 'Paris', 'Saclay', 'Lille', 'Marseille', 'Nantes', 
+                         'Grenoble', 'Tours', 'Angers', 'Orléans', 'Montpellier', 
+                         'Annecy', 'Clermont-Ferrand', 'Nancy', 'Nice'];
+    
+    for (const city of knownCities) {
+      if (address.toLowerCase().includes(city.toLowerCase())) {
+        return city;
+      }
+    }
+    
+    return 'Ville inconnue';
   }
 }

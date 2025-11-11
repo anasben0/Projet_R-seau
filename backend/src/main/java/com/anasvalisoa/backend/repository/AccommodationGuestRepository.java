@@ -1,15 +1,16 @@
 package com.anasvalisoa.backend.repository;
 
-import com.anasvalisoa.backend.entity.AccommodationGuest;
-import com.anasvalisoa.backend.entity.RequestStatus;
+import java.util.List;
+import java.util.Optional;
+import java.util.UUID;
+
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
-import java.util.List;
-import java.util.Optional;
-import java.util.UUID;
+import com.anasvalisoa.backend.entity.AccommodationGuest;
+import com.anasvalisoa.backend.entity.RequestStatus;
 
 @Repository
 public interface AccommodationGuestRepository extends JpaRepository<AccommodationGuest, AccommodationGuest.AccommodationGuestId> {
@@ -19,7 +20,7 @@ public interface AccommodationGuestRepository extends JpaRepository<Accommodatio
     List<AccommodationGuest> findByAccommodationId(@Param("accommodationId") UUID accommodationId);
 
     // Compter les invités acceptés pour un hébergement
-    @Query("SELECT COUNT(ag) FROM AccommodationGuest ag WHERE ag.accommodation.id = :accommodationId AND ag.status = :status")
+    @Query("SELECT COUNT(ag) FROM AccommodationGuest ag WHERE ag.accommodation.id = :accommodationId AND CAST(ag.status AS string) = CAST(:status AS string)")
     Long countByAccommodationIdAndStatus(@Param("accommodationId") UUID accommodationId, @Param("status") RequestStatus status);
 
     // Vérifier si un utilisateur a déjà une demande pour un hébergement

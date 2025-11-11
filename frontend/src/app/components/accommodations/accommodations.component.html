@@ -53,11 +53,11 @@
       <form class="add-form" (ngSubmit)="addAccommodation()">
         <div class="form-row">
           <div class="form-group">
-            <label>Nom *</label>
+            <label>Titre *</label>
             <input 
               type="text" 
-              [(ngModel)]="newAccommodation.name" 
-              name="name"
+              [(ngModel)]="newAccommodation.title" 
+              name="title"
               placeholder="Ex: Résidence Polytech"
               required>
           </div>
@@ -82,42 +82,22 @@
 
         <div class="form-row">
           <div class="form-group">
-            <label>Nombre total de places *</label>
+            <label>Capacité (nombre de places) *</label>
             <input 
               type="number" 
-              [(ngModel)]="newAccommodation.totalSpots" 
-              name="totalSpots"
+              [(ngModel)]="newAccommodation.capacity" 
+              name="capacity"
               min="1"
               required>
           </div>
           <div class="form-group">
-            <label>Places disponibles *</label>
+            <label>Contact (email ou téléphone)</label>
             <input 
-              type="number" 
-              [(ngModel)]="newAccommodation.availableSpots" 
-              name="availableSpots"
-              min="0"
-              [max]="newAccommodation.totalSpots"
-              required>
+              type="text" 
+              [(ngModel)]="newAccommodation.contact" 
+              name="contact"
+              placeholder="email@example.com ou 06 12 34 56 78">
           </div>
-        </div>
-
-        <div class="form-group">
-          <label>Email de contact</label>
-          <input 
-            type="email" 
-            [(ngModel)]="newAccommodation.contactEmail" 
-            name="contactEmail"
-            placeholder="contact@example.com">
-        </div>
-
-        <div class="form-group">
-          <label>Description</label>
-          <textarea 
-            [(ngModel)]="newAccommodation.description" 
-            name="description"
-            rows="3"
-            placeholder="Décrivez brièvement l'hébergement..."></textarea>
         </div>
 
         <button type="submit" class="submit-btn">
@@ -158,7 +138,7 @@
 
         <!-- Contenu de la carte -->
         <div class="card-header">
-          <h3>{{ accommodation.name }}</h3>
+          <h3>{{ accommodation.title }}</h3>
           <span class="city-badge">📍 {{ accommodation.city }}</span>
         </div>
 
@@ -170,17 +150,18 @@
 
           <div class="info-item">
             <span class="icon">👥</span>
-            <span>{{ accommodation.availableSpots }} / {{ accommodation.totalSpots }} places</span>
+            <span>{{ accommodation.availableSpots }} / {{ accommodation.capacity }} places</span>
           </div>
 
-          <p class="description" *ngIf="accommodation.description">
-            {{ accommodation.description }}
-          </p>
+          <div class="info-item" *ngIf="accommodation.contact">
+            <span class="icon">📞</span>
+            <span>{{ accommodation.contact }}</span>
+          </div>
 
           <div class="progress-bar">
             <div 
               class="progress-fill" 
-              [style.width.%]="(accommodation.availableSpots / accommodation.totalSpots) * 100"
+              [style.width.%]="(accommodation.availableSpots / accommodation.capacity) * 100"
               [ngClass]="getAvailabilityClass(accommodation)">
             </div>
           </div>
