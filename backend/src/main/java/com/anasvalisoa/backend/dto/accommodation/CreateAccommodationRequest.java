@@ -8,7 +8,7 @@ import java.util.UUID;
 
 public class CreateAccommodationRequest {
 
-    @NotNull(message = "Event ID is required")
+    // eventId est désormais optionnel - l'événement général sera utilisé par défaut
     private UUID eventId;
 
     private String title;

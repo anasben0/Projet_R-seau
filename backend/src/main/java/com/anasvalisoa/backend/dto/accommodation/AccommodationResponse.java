@@ -8,6 +8,7 @@ public class AccommodationResponse {
     private UUID id;
     private UUID eventId;
     private String eventName;
+    private String schoolName;  // Nom de l'école associée à l'événement
     private UUID hostId;
     private String hostName;
     private String title;
@@ -22,12 +23,13 @@ public class AccommodationResponse {
     public AccommodationResponse() {
     }
 
-    public AccommodationResponse(UUID id, UUID eventId, String eventName, UUID hostId, String hostName,
+    public AccommodationResponse(UUID id, UUID eventId, String eventName, String schoolName, UUID hostId, String hostName,
                                  String title, String address, String contact, Integer capacity,
                                  Integer availableSpots, Integer acceptedGuests, ZonedDateTime createdAt) {
         this.id = id;
         this.eventId = eventId;
         this.eventName = eventName;
+        this.schoolName = schoolName;
         this.hostId = hostId;
         this.hostName = hostName;
         this.title = title;
@@ -62,6 +64,14 @@ public class AccommodationResponse {
 
     public void setEventName(String eventName) {
         this.eventName = eventName;
+    }
+
+    public String getSchoolName() {
+        return schoolName;
+    }
+
+    public void setSchoolName(String schoolName) {
+        this.schoolName = schoolName;
     }
 
     public UUID getHostId() {

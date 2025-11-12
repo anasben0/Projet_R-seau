@@ -12,8 +12,12 @@ public class Event {
   @UuidGenerator
   private UUID id;
 
-  @Column(name = "school_id", nullable = false)
+  @Column(name = "school_id", nullable = false, insertable = false, updatable = false)
   private UUID schoolId;
+
+  @ManyToOne(fetch = FetchType.LAZY)
+  @JoinColumn(name = "school_id", nullable = false)
+  private School school;
 
   @Column(nullable = false)
   private String name;
@@ -40,6 +44,8 @@ public class Event {
   public void setId(UUID id) { this.id = id; }
   public UUID getSchoolId() { return schoolId; }
   public void setSchoolId(UUID schoolId) { this.schoolId = schoolId; }
+  public School getSchool() { return school; }
+  public void setSchool(School school) { this.school = school; }
   public String getName() { return name; }
   public void setName(String name) { this.name = name; }
   public String getActivities() { return activities; }

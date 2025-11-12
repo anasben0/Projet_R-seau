@@ -24,7 +24,20 @@ export class Dashboard implements OnInit, AfterViewInit {
 
   ngOnInit(): void {
     this.user = this.authService.getCurrentUser();
-    this.events = this.eventsService.getAllEvents();
+    // Charger les événements depuis l'API
+    this.eventsService.getAllEventsFromAPI().subscribe({
+      next: (events) => {
+        this.events = events;
+        // Réinitialiser la carte après le chargement des événements
+        if (isPlatformBrowser(this.platformId) && this.map) {
+          this.addMarkersToMap();
+        }
+      },
+      error: (error) => {
+        console.error('Error loading events:', error);
+        this.events = [];
+      }
+    });
   }
 
   ngAfterViewInit(): void {
@@ -47,6 +60,23 @@ export class Dashboard implements OnInit, AfterViewInit {
       attribution: '© OpenStreetMap contributors'
     }).addTo(this.map);
 
+    // Si les événements sont déjà chargés, ajouter les marqueurs
+    if (this.events.length > 0) {
+      this.addMarkersToMap(L);
+    }
+  }
+
+  private addMarkersToMap(L?: any): void {
+    if (!this.map) return;
+
+    // Si L n'est pas fourni, on ne peut pas créer les marqueurs
+    if (!L) {
+      import('leaflet').then(leafletModule => {
+        this.addMarkersToMap(leafletModule.default);
+      });
+      return;
+    }
+
     // Créer une icône personnalisée pour les pins
     const customIcon = L.icon({
       iconUrl: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-red.png',
@@ -57,8 +87,8 @@ export class Dashboard implements OnInit, AfterViewInit {
       shadowSize: [41, 41]
     });
 
-    // Grouper les événements par ville
-    const eventsGrouped = this.eventsService.getEventsGroupedByLocation();
+    // Grouper les événements par école (location)
+    const eventsGrouped = this.eventsService.getEventsGroupedByLocation(this.events);
 
     // Ajouter les marqueurs pour chaque ville qui a des événements
     eventsGrouped.forEach((cityEvents, locationName) => {

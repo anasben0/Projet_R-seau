@@ -38,8 +38,7 @@
       <div 
         *ngFor="let event of filteredEvents" 
         class="event-card"
-        [style.border-left-color]="event.color"
-        (click)="viewEventDetails(event)">
+        [style.border-left-color]="event.color">
         
         <!-- Badge de couleur -->
         <div class="event-color-badge" [style.background-color]="event.color"></div>
@@ -64,7 +63,7 @@
           
           <p class="event-description">{{ event.description }}</p>
           
-          <button class="view-btn">
+          <button class="view-btn" (click)="viewEventDetails(event)">
             Voir les détails →
           </button>
         </div>

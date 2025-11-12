@@ -7,6 +7,7 @@ export interface Accommodation {
   id: string;  // UUID du backend
   eventId?: string;
   eventName?: string;
+  schoolName?: string;  // Nom de l'école associée à l'événement
   hostId?: string;
   hostName?: string;
   title: string;  // Backend utilise "title" au lieu de "name"
@@ -14,14 +15,14 @@ export interface Accommodation {
   city: string;  // Sera extrait de l'adresse ou ajouté manuellement
   contact?: string;  // Backend utilise "contact" au lieu de "contactEmail"
   capacity: number;  // Backend utilise "capacity" au lieu de "totalSpots"
-  availableSpots: number;
-  acceptedGuests?: number;
+  availableSpots: number;  // Calculé par le backend (capacity - acceptedGuests)
+  acceptedGuests: number;  // Nombre d'invités acceptés (status='accepted')
   description?: string;
   createdAt?: string;
 }
 
 export interface AccommodationCreateRequest {
-  eventId: string;
+  eventId?: string; // Optionnel - le backend utilise un événement général par défaut
   title: string;
   address: string;
   contact?: string;
@@ -109,6 +110,36 @@ export class AccommodationService {
    */
   deleteAccommodation(id: string, hostId: string): Observable<void> {
     return this.http.delete<void>(`${this.apiUrl}/${id}?hostId=${hostId}`);
+  }
+
+  /**
+   * Rejoindre un hébergement (faire une demande)
+   */
+  joinAccommodation(accommodationId: string, guestId: string): Observable<any> {
+    return this.http.post<any>(`${this.apiUrl}/${accommodationId}/join?guestId=${guestId}`, {});
+  }
+
+  /**
+   * Quitter un hébergement (annuler une demande)
+   */
+  leaveAccommodation(accommodationId: string, guestId: string): Observable<any> {
+    return this.http.delete<any>(`${this.apiUrl}/${accommodationId}/leave?guestId=${guestId}`);
+  }
+
+  /**
+   * Récupérer la liste des invités d'un hébergement
+   */
+  getGuestsByAccommodation(accommodationId: string): Observable<any[]> {
+    return this.http.get<any[]>(`${this.apiUrl}/${accommodationId}/guests`);
+  }
+
+  /**
+   * Mettre à jour le statut d'un invité (accepter/refuser)
+   */
+  updateGuestStatus(accommodationId: string, guestId: string, status: 'accepted' | 'declined'): Observable<any> {
+    // Cette fonctionnalité nécessite un nouvel endpoint backend
+    // Pour l'instant, on utilise une approche alternative : supprimer et re-créer avec le bon statut
+    return this.http.put<any>(`${this.apiUrl}/${accommodationId}/guests/${guestId}/status`, { status });
   }
 
   /**

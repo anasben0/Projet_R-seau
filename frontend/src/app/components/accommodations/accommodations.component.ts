@@ -1,7 +1,7 @@
 import { Component, OnInit, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { Router } from '@angular/router';
+import { Router, ActivatedRoute } from '@angular/router';
 import { AccommodationService, Accommodation } from '../../services/accommodation.service';
 import { AuthService } from '../../services/auth.service';
 import { EventsService } from '../../services/events.service';
@@ -25,11 +25,12 @@ export class AccommodationsComponent implements OnInit {
   isAdmin: boolean = false;
   newAccommodation = {
     title: '',
+    description: '',  // Nouvelle propriété pour la description
     address: '',
     city: '',
     capacity: 1,
-    contact: '',
-    eventId: ''  // Sera rempli avec le premier événement
+    contact: '',  // Sera rempli automatiquement avec l'email/phone de l'utilisateur
+    eventId: ''
   };
 
   constructor(
@@ -37,6 +38,7 @@ export class AccommodationsComponent implements OnInit {
     private authService: AuthService,
     private eventsService: EventsService,
     private router: Router,
+    private route: ActivatedRoute,
     private cdr: ChangeDetectorRef
   ) {}
 
@@ -46,7 +48,22 @@ export class AccommodationsComponent implements OnInit {
     console.log('AccommodationsComponent - Current user:', this.authService.getCurrentUser());
     
     this.checkAdminStatus();
+    
+    // Charger les hébergements une fois
     this.loadAccommodations();
+    
+    // Vérifier si une ville est passée en query parameter (après le chargement)
+    this.route.queryParams.subscribe(params => {
+      const cityParam = params['city'];
+      if (cityParam) {
+        console.log('City filter from query params:', cityParam);
+        this.selectedCity = cityParam;
+        // Réappliquer les filtres si les données sont déjà chargées
+        if (this.accommodations.length > 0) {
+          this.applyFilters();
+        }
+      }
+    });
   }
 
   loadAccommodations(): void {
@@ -54,8 +71,17 @@ export class AccommodationsComponent implements OnInit {
     this.accommodationService.getAllAccommodations().subscribe({
       next: (accommodations) => {
         console.log('Accommodations received from backend:', accommodations);
+        console.log('First accommodation acceptedGuests:', accommodations[0]?.acceptedGuests);
         this.accommodations = [...accommodations]; // Créer une nouvelle référence
         this.loadAvailableCities();
+        
+        // Afficher un message si la ville filtrée n'a pas d'hébergements
+        if (this.selectedCity !== 'Toutes' && !this.availableCities.includes(this.selectedCity)) {
+          console.warn('Ville non trouvée dans les hébergements disponibles:', this.selectedCity);
+          alert(`ℹ️ Aucun hébergement disponible pour ${this.selectedCity} pour le moment.\n\nAffichage de tous les hébergements disponibles.`);
+          this.selectedCity = 'Toutes';
+        }
+        
         // Réappliquer les filtres après le chargement
         this.applyFilters();
         console.log('Accommodations loaded and filtered:', this.filteredAccommodations.length);
@@ -73,20 +99,31 @@ export class AccommodationsComponent implements OnInit {
   }
 
   loadAvailableCities(): void {
-    // Récupérer les villes depuis les événements
-    const events = this.eventsService.getAllEvents();
-    const eventCities = [...new Set(events.map(e => e.location))];
-    
-    // Récupérer les villes avec des hébergements directement depuis le tableau
-    const accommodationCities = [...new Set(this.accommodations.map(acc => acc.city))];
-    
-    // Combiner et dédupliquer
-    this.availableCities = ['Toutes', ...new Set([...eventCities, ...accommodationCities])].sort();
+    // Charger les écoles disponibles depuis les événements
+    this.eventsService.getAllEventsFromAPI().subscribe({
+      next: (events) => {
+        // Extraire les noms d'écoles uniques depuis les événements
+        const eventSchools = [...new Set(events.map((e: any) => e.location).filter((loc: string) => loc))];
+        
+        // Extraire les noms d'écoles depuis les hébergements
+        const accommodationSchools = [...new Set(this.accommodations.map(acc => acc.schoolName).filter(school => school))];
+        
+        // Combiner et dédupliquer
+        this.availableCities = ['Toutes', ...new Set([...eventSchools, ...accommodationSchools])].sort();
+      },
+      error: (error) => {
+        console.error('Error loading events for schools:', error);
+        // Fallback: utiliser uniquement les écoles des hébergements
+        const accommodationSchools = [...new Set(this.accommodations.map(acc => acc.schoolName).filter(school => school))] as string[];
+        this.availableCities = ['Toutes', ...accommodationSchools].sort();
+      }
+    });
   }
 
   checkAdminStatus(): void {
     const user = this.authService.getCurrentUser();
-    this.isAdmin = user?.email === 'dev@polyrezo.com' || user?.role === 'admin';
+    // Permettre à tous les utilisateurs authentifiés de créer des hébergements
+    this.isAdmin = this.authService.isAuthenticated();
   }
 
   filterByCity(city: string): void {
@@ -101,9 +138,9 @@ export class AccommodationsComponent implements OnInit {
   applyFilters(): void {
     let filtered = [...this.accommodations]; // Créer une copie
 
-    // Filtre par ville
+    // Filtre par école (utilise schoolName au lieu de city)
     if (this.selectedCity !== 'Toutes') {
-      filtered = filtered.filter(acc => acc.city === this.selectedCity);
+      filtered = filtered.filter(acc => acc.schoolName === this.selectedCity);
     }
 
     // Filtre par recherche
@@ -124,6 +161,14 @@ export class AccommodationsComponent implements OnInit {
     this.showAddForm = !this.showAddForm;
     if (!this.showAddForm) {
       this.resetForm();
+    } else {
+      // Remplir automatiquement le contact avec l'email et le téléphone de l'utilisateur
+      const user = this.authService.getCurrentUser();
+      if (user) {
+        this.newAccommodation.contact = user.phone 
+          ? `${user.email} / ${user.phone}` 
+          : user.email;
+      }
     }
   }
 
@@ -135,11 +180,8 @@ export class AccommodationsComponent implements OnInit {
         return;
       }
 
-      // UUID de l'événement "Hébergements Polytech - Général" créé dans la base de données
-      const generalEventId = '76d5acce-1e33-471d-8556-dcdb8ff85e19';
-
+      // Plus besoin de spécifier eventId - le backend gère l'événement général automatiquement
       const accommodationData = {
-        eventId: generalEventId,
         title: this.newAccommodation.title,
         address: `${this.newAccommodation.address}, ${this.newAccommodation.city}`,
         contact: this.newAccommodation.contact,
@@ -184,6 +226,7 @@ export class AccommodationsComponent implements OnInit {
   resetForm(): void {
     this.newAccommodation = {
       title: '',
+      description: '',
       address: '',
       city: '',
       capacity: 1,
@@ -194,6 +237,10 @@ export class AccommodationsComponent implements OnInit {
 
   goToDashboard(): void {
     this.router.navigate(['/dashboard']);
+  }
+
+  viewDetails(accommodationId: string): void {
+    this.router.navigate(['/accommodations', accommodationId]);
   }
 
   contactAccommodation(accommodation: Accommodation): void {
@@ -211,16 +258,24 @@ export class AccommodationsComponent implements OnInit {
   }
 
   getAvailabilityClass(accommodation: Accommodation): string {
-    const ratio = accommodation.availableSpots / accommodation.capacity;
-    if (accommodation.availableSpots === 0) return 'full';
+    const availableSpots = this.getAvailableSpots(accommodation);
+    const ratio = availableSpots / accommodation.capacity;
+    if (availableSpots === 0) return 'full';
     if (ratio < 0.3) return 'low';
     return 'available';
   }
 
   getAvailabilityText(accommodation: Accommodation): string {
-    if (accommodation.availableSpots === 0) return 'Complet';
-    if (accommodation.availableSpots === 1) return '1 place disponible';
-    return `${accommodation.availableSpots} places disponibles`;
+    const availableSpots = this.getAvailableSpots(accommodation);
+    if (availableSpots === 0) return 'Complet';
+    if (availableSpots === 1) return '1 place disponible';
+    return `${availableSpots} places disponibles`;
+  }
+
+  // Calcule les places disponibles en temps réel
+  getAvailableSpots(accommodation: Accommodation): number {
+    const acceptedCount = accommodation.acceptedGuests ?? 0;
+    return accommodation.capacity - acceptedCount;
   }
 
   getTotalAvailableSpots(): number {

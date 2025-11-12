@@ -20,26 +20,57 @@ public class AccommodationService {
     private final AccommodationGuestRepository accommodationGuestRepository;
     private final EventRepository eventRepository;
     private final UserRepository userRepository;
+    private final SchoolRepository schoolRepository;
 
     public AccommodationService(AccommodationRepository accommodationRepository,
                                 AccommodationGuestRepository accommodationGuestRepository,
                                 EventRepository eventRepository,
-                                UserRepository userRepository) {
+                                UserRepository userRepository,
+                                SchoolRepository schoolRepository) {
         this.accommodationRepository = accommodationRepository;
         this.accommodationGuestRepository = accommodationGuestRepository;
         this.eventRepository = eventRepository;
         this.userRepository = userRepository;
+        this.schoolRepository = schoolRepository;
     }
 
     @Transactional
     public AccommodationResponse createAccommodation(CreateAccommodationRequest request, UUID hostId) {
-        // Vérifier que l'événement existe
-        Event event = eventRepository.findById(request.getEventId())
-                .orElseThrow(() -> new RuntimeException("Event not found"));
-
-        // Vérifier que l'utilisateur existe
+        // Vérifier que l'utilisateur existe et récupérer son école
         User host = userRepository.findById(hostId)
                 .orElseThrow(() -> new RuntimeException("User not found"));
+        
+        UUID schoolId = host.getSchoolId();
+        
+        // Chercher ou créer l'événement général pour cette école
+        Event event;
+        if (request.getEventId() != null) {
+            // Si un eventId est spécifié, l'utiliser
+            event = eventRepository.findById(request.getEventId())
+                    .orElseThrow(() -> new RuntimeException("Event not found"));
+        } else {
+            // Sinon, chercher l'événement général de cette école
+            // (nom fixe pour identifier l'événement général)
+            event = eventRepository.findAll().stream()
+                    .filter(e -> "Hébergements Polytech - Réseau".equals(e.getName()) 
+                              && schoolId.equals(e.getSchoolId()))
+                    .findFirst()
+                    .orElseGet(() -> {
+                        // Créer l'événement général pour cette école
+                        Event generalEvent = new Event();
+                        generalEvent.setSchoolId(schoolId);
+                        generalEvent.setName("Hébergements Polytech - Réseau");
+                        generalEvent.setActivities("Hébergements proposés par les membres du réseau Polytech");
+                        generalEvent.setStartsAt(java.time.OffsetDateTime.parse("2024-01-01T00:00:00Z"));
+                        generalEvent.setEndsAt(java.time.OffsetDateTime.parse("2099-12-31T23:59:59Z"));
+                        generalEvent.setAddress("France");
+                        generalEvent.setRoom("Réseau Polytech");
+                        generalEvent.setCreatedBy(hostId);
+                        generalEvent.setCreatedAt(java.time.OffsetDateTime.now());
+                        
+                        return eventRepository.save(generalEvent);
+                    });
+        }
 
         // Créer l'hébergement
         Accommodation accommodation = new Accommodation(
@@ -161,14 +192,14 @@ public class AccommodationService {
             throw new RuntimeException("You cannot join your own accommodation");
         }
 
-        // Vérifier la capacité
+        // Vérifier la capacité disponible (compter seulement les acceptés)
         Long acceptedCount = accommodationGuestRepository.countByAccommodationIdAndStatus(accommodationId, RequestStatus.accepted);
         if (acceptedCount >= accommodation.getCapacity()) {
             throw new RuntimeException("This accommodation is full");
         }
 
-        // Créer la demande avec statut "accepted" directement (auto-acceptation)
-        AccommodationGuest accommodationGuest = new AccommodationGuest(accommodation, guest, RequestStatus.accepted);
+        // Créer la demande avec statut "requested" - l'hôte devra accepter
+        AccommodationGuest accommodationGuest = new AccommodationGuest(accommodation, guest, RequestStatus.requested);
         accommodationGuestRepository.save(accommodationGuest);
     }
 
@@ -195,6 +226,27 @@ public class AccommodationService {
                 .collect(Collectors.toList());
     }
 
+    @Transactional
+    public void updateGuestStatus(UUID accommodationId, UUID guestId, RequestStatus newStatus) {
+        AccommodationGuest.AccommodationGuestId id = new AccommodationGuest.AccommodationGuestId(accommodationId, guestId);
+        AccommodationGuest accommodationGuest = accommodationGuestRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Guest not found in this accommodation"));
+
+        // Vérifier la capacité si on accepte un invité
+        if (newStatus == RequestStatus.accepted && accommodationGuest.getStatus() != RequestStatus.accepted) {
+            Accommodation accommodation = accommodationRepository.findById(accommodationId)
+                    .orElseThrow(() -> new RuntimeException("Accommodation not found"));
+            
+            Long acceptedCount = accommodationGuestRepository.countByAccommodationIdAndStatus(accommodationId, RequestStatus.accepted);
+            if (acceptedCount >= accommodation.getCapacity()) {
+                throw new RuntimeException("This accommodation is full");
+            }
+        }
+
+        accommodationGuest.setStatus(newStatus);
+        accommodationGuestRepository.save(accommodationGuest);
+    }
+
     private AccommodationResponse mapToResponse(Accommodation accommodation) {
         Long acceptedCount = accommodationGuestRepository.countByAccommodationIdAndStatus(
                 accommodation.getId(),
@@ -203,11 +255,13 @@ public class AccommodationService {
 
         String hostName = accommodation.getHost().getFirstName() + " " + accommodation.getHost().getLastName();
         String eventName = accommodation.getEvent().getName();
+        String schoolName = accommodation.getEvent().getSchool().getName();  // Nom de l'école
 
         return new AccommodationResponse(
                 accommodation.getId(),
                 accommodation.getEvent().getId(),
                 eventName,
+                schoolName,
                 accommodation.getHost().getId(),
                 hostName,
                 accommodation.getTitle(),
@@ -221,11 +275,21 @@ public class AccommodationService {
     }
 
     private GuestResponse mapToGuestResponse(AccommodationGuest ag) {
-        String guestName = ag.getGuest().getFirstName() + " " + ag.getGuest().getLastName();
+        User guest = ag.getGuest();
+        String guestName = guest.getFirstName() + " " + guest.getLastName();
+        String guestPhone = guest.getPhone();
+        
+        // Récupérer le nom de l'école
+        String schoolName = schoolRepository.findById(guest.getSchoolId())
+                .map(School::getName)
+                .orElse("École inconnue");
+        
         return new GuestResponse(
-                ag.getGuest().getId(),
+                guest.getId(),
                 guestName,
-                ag.getGuest().getEmail(),
+                guest.getEmail(),
+                guestPhone,
+                schoolName,
                 ag.getStatus().name(),
                 ag.getRequestedAt()
         );

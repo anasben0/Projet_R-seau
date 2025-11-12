@@ -4,6 +4,7 @@ import com.anasvalisoa.backend.dto.accommodation.AccommodationResponse;
 import com.anasvalisoa.backend.dto.accommodation.CreateAccommodationRequest;
 import com.anasvalisoa.backend.dto.accommodation.GuestResponse;
 import com.anasvalisoa.backend.dto.accommodation.UpdateAccommodationRequest;
+import com.anasvalisoa.backend.entity.RequestStatus;
 import com.anasvalisoa.backend.service.AccommodationService;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
@@ -32,14 +33,23 @@ public class AccommodationController {
      * POST /api/accommodations?hostId={uuid}
      */
     @PostMapping
-    public ResponseEntity<AccommodationResponse> createAccommodation(
+    public ResponseEntity<?> createAccommodation(
             @Valid @RequestBody CreateAccommodationRequest request,
             @RequestParam UUID hostId) {
         try {
+            System.out.println("Creating accommodation with request: " + request);
+            System.out.println("Host ID: " + hostId);
+            System.out.println("Title: " + request.getTitle());
+            System.out.println("Address: " + request.getAddress());
+            System.out.println("Contact: " + request.getContact());
+            System.out.println("Capacity: " + request.getCapacity());
+            System.out.println("EventId: " + request.getEventId());
+            
             AccommodationResponse response = accommodationService.createAccommodation(request, hostId);
             return ResponseEntity.status(HttpStatus.CREATED).body(response);
         } catch (RuntimeException e) {
-            return ResponseEntity.badRequest().build();
+            e.printStackTrace();
+            return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
         }
     }
 
@@ -90,9 +100,13 @@ public class AccommodationController {
     @GetMapping("/{id}")
     public ResponseEntity<AccommodationResponse> getAccommodationById(@PathVariable UUID id) {
         try {
+            System.out.println("GET /api/accommodations/" + id);
             AccommodationResponse accommodation = accommodationService.getAccommodationById(id);
+            System.out.println("Accommodation found: " + accommodation.getTitle());
             return ResponseEntity.ok(accommodation);
         } catch (RuntimeException e) {
+            System.err.println("Error getting accommodation by ID: " + e.getMessage());
+            e.printStackTrace();
             return ResponseEntity.notFound().build();
         }
     }
@@ -191,7 +205,9 @@ public class AccommodationController {
      */
     @GetMapping("/{id}/guests")
     public ResponseEntity<List<GuestResponse>> getGuestsByAccommodation(@PathVariable UUID id) {
+        System.out.println("GET /api/accommodations/" + id + "/guests");
         List<GuestResponse> guests = accommodationService.getGuestsByAccommodation(id);
+        System.out.println("Found " + guests.size() + " guests");
         return ResponseEntity.ok(guests);
     }
 
@@ -203,6 +219,42 @@ public class AccommodationController {
     public ResponseEntity<List<AccommodationResponse>> getMyAccommodations(@RequestParam UUID guestId) {
         List<AccommodationResponse> accommodations = accommodationService.getMyAccommodations(guestId);
         return ResponseEntity.ok(accommodations);
+    }
+
+    /**
+     * Mettre à jour le statut d'un invité (accepter/refuser)
+     * PUT /api/accommodations/{id}/guests/{guestId}/status
+     */
+    @PutMapping("/{id}/guests/{guestId}/status")
+    public ResponseEntity<Map<String, String>> updateGuestStatus(
+            @PathVariable UUID id,
+            @PathVariable UUID guestId,
+            @RequestBody Map<String, String> body) {
+        try {
+            String statusStr = body.get("status");
+            if (statusStr == null) {
+                return ResponseEntity.badRequest().body(Map.of("error", "Status is required"));
+            }
+
+            RequestStatus status;
+            try {
+                status = RequestStatus.valueOf(statusStr.toLowerCase());
+            } catch (IllegalArgumentException e) {
+                return ResponseEntity.badRequest().body(Map.of("error", "Invalid status value"));
+            }
+
+            accommodationService.updateGuestStatus(id, guestId, status);
+            Map<String, String> response = new HashMap<>();
+            response.put("message", "Guest status updated successfully");
+            return ResponseEntity.ok(response);
+        } catch (RuntimeException e) {
+            Map<String, String> error = new HashMap<>();
+            error.put("error", e.getMessage());
+            if (e.getMessage().contains("full")) {
+                return ResponseEntity.status(HttpStatus.CONFLICT).body(error);
+            }
+            return ResponseEntity.badRequest().body(error);
+        }
     }
 
     /**

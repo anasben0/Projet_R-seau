@@ -20,7 +20,7 @@ public interface AccommodationGuestRepository extends JpaRepository<Accommodatio
     List<AccommodationGuest> findByAccommodationId(@Param("accommodationId") UUID accommodationId);
 
     // Compter les invités acceptés pour un hébergement
-    @Query("SELECT COUNT(ag) FROM AccommodationGuest ag WHERE ag.accommodation.id = :accommodationId AND CAST(ag.status AS string) = CAST(:status AS string)")
+    @Query("SELECT COUNT(ag) FROM AccommodationGuest ag WHERE ag.accommodation.id = :accommodationId AND ag.status = :status")
     Long countByAccommodationIdAndStatus(@Param("accommodationId") UUID accommodationId, @Param("status") RequestStatus status);
 
     // Vérifier si un utilisateur a déjà une demande pour un hébergement

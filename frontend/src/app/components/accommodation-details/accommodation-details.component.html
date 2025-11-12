@@ -1,0 +1,200 @@
+<div class="details-container">
+  <!-- Loading -->
+  <div *ngIf="loading" class="loading">
+    <div class="spinner"></div>
+    <p>Chargement...</p>
+  </div>
+
+  <!-- Error -->
+  <div *ngIf="error && !loading" class="error-message">
+    <h3>❌ {{ error }}</h3>
+    <button class="btn-back" (click)="goBack()">← Retour aux hébergements</button>
+  </div>
+
+  <!-- Content -->
+  <div *ngIf="!loading && !error && accommodation" class="details-content">
+    
+    <!-- Header -->
+    <div class="details-header">
+      <button class="btn-back" (click)="goBack()">← Retour</button>
+      <h1>{{ accommodation.title }}</h1>
+      <div class="header-info">
+        <span class="city-badge">📍 {{ accommodation.city }}</span>
+        <span class="host-info">🏠 Proposé par {{ accommodation.hostName }}</span>
+      </div>
+    </div>
+
+    <!-- Main Info Card -->
+    <div class="info-card">
+      <div class="info-section">
+        <h2>📋 Informations</h2>
+        <div class="info-grid">
+          <div class="info-item">
+            <span class="label">📍 Adresse</span>
+            <span class="value">{{ accommodation.address }}</span>
+          </div>
+          <div class="info-item">
+            <span class="label">👥 Capacité totale</span>
+            <span class="value">{{ accommodation.capacity }} personne(s)</span>
+          </div>
+          <div class="info-item">
+            <span class="label">✅ Places disponibles</span>
+            <span class="value available">{{ getAvailableSpots() }} place(s)</span>
+          </div>
+          <div class="info-item" *ngIf="accommodation.contact && (isHost || isAdmin)">
+            <span class="label">📞 Contact</span>
+            <span class="value">{{ accommodation.contact }}</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Progress bar -->
+      <div class="capacity-progress">
+        <div class="progress-info">
+          <span>Occupation: {{ getAcceptedGuests().length }} / {{ accommodation.capacity }}</span>
+          <span>{{ getAvailableSpots() }} place(s) disponible(s)</span>
+        </div>
+        <div class="progress-bar">
+          <div 
+            class="progress-fill" 
+            [style.width.%]="(getAcceptedGuests().length / accommodation.capacity) * 100">
+          </div>
+        </div>
+      </div>
+
+      <!-- User Status & Actions -->
+      <div class="user-actions">
+        <!-- Si l'utilisateur n'a pas encore fait de demande -->
+        <div *ngIf="!currentUserRequest && !isHost" class="action-section">
+          <button 
+            class="btn-join" 
+            (click)="requestToJoin()"
+            [disabled]="getAvailableSpots() === 0">
+            <span *ngIf="getAvailableSpots() > 0">✉️ Demander à rejoindre</span>
+            <span *ngIf="getAvailableSpots() === 0">❌ Complet</span>
+          </button>
+          <button class="btn-contact" (click)="contactHost()">
+            📧 Contacter l'hébergeur
+          </button>
+        </div>
+
+        <!-- Si l'utilisateur a fait une demande -->
+        <div *ngIf="currentUserRequest" class="request-status">
+          <div class="status-badge" [ngClass]="getStatusBadgeClass(currentUserRequest.status)">
+            {{ getStatusText(currentUserRequest.status) }}
+          </div>
+          
+          <p *ngIf="currentUserRequest.status === 'requested'" class="status-message">
+            ⏳ Votre demande est en attente de validation par l'hébergeur
+          </p>
+          <p *ngIf="currentUserRequest.status === 'accepted'" class="status-message success">
+            ✅ Votre demande a été acceptée ! Vous êtes maintenant dans la liste des personnes hébergées.
+          </p>
+          <p *ngIf="currentUserRequest.status === 'declined'" class="status-message declined">
+            ❌ Votre demande a été refusée par l'hébergeur.
+          </p>
+
+          <button 
+            *ngIf="currentUserRequest.status !== 'accepted'"
+            class="btn-cancel" 
+            (click)="cancelRequest()">
+            Annuler ma demande
+          </button>
+          <button 
+            *ngIf="currentUserRequest.status === 'accepted'"
+            class="btn-leave" 
+            (click)="cancelRequest()">
+            Quitter l'hébergement
+          </button>
+        </div>
+
+        <!-- Si c'est l'hôte -->
+        <div *ngIf="isHost" class="host-info-banner">
+          🏠 Vous êtes le propriétaire de cet hébergement
+        </div>
+      </div>
+    </div>
+
+    <!-- Guests List -->
+    <div class="guests-section">
+      <h2>👥 Personnes hébergées ({{ getAcceptedGuests().length }})</h2>
+      
+      <!-- Accepted Guests -->
+      <div *ngIf="getAcceptedGuests().length > 0" class="guests-list">
+        <div *ngFor="let guest of getAcceptedGuests()" class="guest-card accepted">
+          <div class="guest-info">
+            <div class="guest-avatar">👤</div>
+            <div class="guest-details">
+              <h3>{{ guest.guestName }}</h3>
+              <p class="guest-school" *ngIf="guest.guestSchool">🎓 {{ guest.guestSchool }}</p>
+              
+              <!-- Détails complets pour hôte et admin -->
+              <div *ngIf="canSeeFullDetails(guest)" class="full-details">
+                <p *ngIf="guest.guestEmail">📧 {{ guest.guestEmail }}</p>
+                <p *ngIf="guest.guestPhone">📞 {{ guest.guestPhone }}</p>
+                <p class="join-date">📅 Accepté le {{ formatDate(guest.requestedAt) }}</p>
+              </div>
+            </div>
+          </div>
+          
+          <!-- Actions pour l'hôte UNIQUEMENT -->
+          <div *ngIf="isHost" class="guest-actions">
+            <button class="btn-remove" (click)="removeGuest(guest)">
+              🗑️ Retirer
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <div *ngIf="getAcceptedGuests().length === 0" class="no-guests">
+        <p>Aucune personne hébergée pour le moment</p>
+      </div>
+
+      <!-- Pending Requests (visible UNIQUEMENT par l'hôte) -->
+      <div *ngIf="isHost && getPendingGuests().length > 0" class="pending-section">
+        <h2>⏳ Demandes en attente ({{ getPendingGuests().length }})</h2>
+        <div class="guests-list">
+          <div *ngFor="let guest of getPendingGuests()" class="guest-card pending">
+            <div class="guest-info">
+              <div class="guest-avatar">👤</div>
+              <div class="guest-details">
+                <h3>{{ guest.guestName }}</h3>
+                <p class="guest-school" *ngIf="guest.guestSchool">🎓 {{ guest.guestSchool }}</p>
+                <p>📧 {{ guest.guestEmail }}</p>
+                <p *ngIf="guest.guestPhone">📞 {{ guest.guestPhone }}</p>
+                <p class="request-date">📅 Demande envoyée le {{ formatDate(guest.requestedAt) }}</p>
+              </div>
+            </div>
+            
+            <div class="guest-actions">
+              <button class="btn-accept" (click)="acceptGuest(guest)">
+                ✅ Accepter
+              </button>
+              <button class="btn-decline" (click)="declineGuest(guest)">
+                ❌ Refuser
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Declined Requests (visible UNIQUEMENT par l'hôte) -->
+      <div *ngIf="isHost && getDeclinedGuests().length > 0" class="declined-section">
+        <h2>❌ Demandes refusées ({{ getDeclinedGuests().length }})</h2>
+        <div class="guests-list collapsed">
+          <div *ngFor="let guest of getDeclinedGuests()" class="guest-card declined">
+            <div class="guest-info">
+              <div class="guest-avatar">👤</div>
+              <div class="guest-details">
+                <h3>{{ guest.guestName }}</h3>
+                <p class="guest-school" *ngIf="guest.guestSchool">🎓 {{ guest.guestSchool }}</p>
+                <p class="request-date">📅 Refusé le {{ formatDate(guest.requestedAt) }}</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>

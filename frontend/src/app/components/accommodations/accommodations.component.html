@@ -13,6 +13,15 @@
   <!-- Main Content -->
   <div class="accommodations-content">
     
+    <!-- Message de filtre automatique -->
+    <div *ngIf="selectedCity !== 'Toutes'" class="filter-notification">
+      <span class="icon">🔍</span>
+      <span>Hébergements filtrés pour <strong>{{ selectedCity }}</strong></span>
+      <button class="clear-filter-btn" (click)="filterByCity('Toutes')">
+        ✕ Voir tous les hébergements
+      </button>
+    </div>
+
     <!-- Section recherche -->
     <div class="search-section">
       <div class="search-bar">
@@ -40,16 +49,18 @@
       </div>
     </div>
 
-    <!-- Bouton Ajouter (Admin uniquement) -->
-    <div class="admin-section" *ngIf="isAdmin">
+    <!-- Bouton Ajouter (Tous les utilisateurs connectés) -->
+    <div class="user-section" *ngIf="isAdmin">
       <button class="add-btn" (click)="toggleAddForm()">
-        {{ showAddForm ? '❌ Annuler' : '➕ Ajouter un hébergement' }}
+        {{ showAddForm ? '❌ Annuler' : '➕ Proposer mon hébergement' }}
       </button>
+      <p class="help-text" *ngIf="!showAddForm">Vous pouvez proposer votre logement pour accueillir d'autres étudiants Polytech</p>
     </div>
 
-    <!-- Formulaire d'ajout (Admin) -->
+    <!-- Formulaire d'ajout (Utilisateurs connectés) -->
     <div class="add-form-container" *ngIf="showAddForm && isAdmin">
-      <h3>➕ Nouveau hébergement</h3>
+      <h3>🏠 Proposer mon hébergement</h3>
+      <p class="form-intro">Partagez votre logement avec d'autres étudiants du réseau Polytech !</p>
       <form class="add-form" (ngSubmit)="addAccommodation()">
         <div class="form-row">
           <div class="form-group">
@@ -80,6 +91,15 @@
             required>
         </div>
 
+        <div class="form-group">
+          <label>Description de votre logement (optionnel)</label>
+          <textarea 
+            [(ngModel)]="newAccommodation.description" 
+            name="description"
+            placeholder="Ex: Appartement calme, proche des transports. Possibilité de prêter un matelas..."
+            rows="3"></textarea>
+        </div>
+
         <div class="form-row">
           <div class="form-group">
             <label>Capacité (nombre de places) *</label>
@@ -91,12 +111,14 @@
               required>
           </div>
           <div class="form-group">
-            <label>Contact (email ou téléphone)</label>
+            <label>Contact (rempli automatiquement)</label>
             <input 
               type="text" 
               [(ngModel)]="newAccommodation.contact" 
               name="contact"
-              placeholder="email@example.com ou 06 12 34 56 78">
+              placeholder="Votre email et téléphone"
+              readonly
+              title="Contact rempli automatiquement avec vos informations de compte">
           </div>
         </div>
 
@@ -129,7 +151,7 @@
       <div 
         *ngFor="let accommodation of filteredAccommodations" 
         class="accommodation-card"
-        [class.full]="accommodation.availableSpots === 0">
+        [class.full]="getAvailableSpots(accommodation) === 0">
         
         <!-- Badge de disponibilité -->
         <div class="availability-badge" [ngClass]="getAvailabilityClass(accommodation)">
@@ -150,7 +172,7 @@
 
           <div class="info-item">
             <span class="icon">👥</span>
-            <span>{{ accommodation.availableSpots }} / {{ accommodation.capacity }} places</span>
+            <span>{{ getAvailableSpots(accommodation) }} / {{ accommodation.capacity }} places</span>
           </div>
 
           <div class="info-item" *ngIf="accommodation.contact">
@@ -161,7 +183,7 @@
           <div class="progress-bar">
             <div 
               class="progress-fill" 
-              [style.width.%]="(accommodation.availableSpots / accommodation.capacity) * 100"
+              [style.width.%]="(getAvailableSpots(accommodation) / accommodation.capacity) * 100"
               [ngClass]="getAvailabilityClass(accommodation)">
             </div>
           </div>
@@ -169,11 +191,16 @@
 
         <div class="card-footer">
           <button 
+            class="details-btn" 
+            (click)="viewDetails(accommodation.id)">
+            👁️ Voir détails
+          </button>
+          <button 
             class="contact-btn" 
             (click)="contactAccommodation(accommodation)"
-            [disabled]="accommodation.availableSpots === 0">
-            <span *ngIf="accommodation.availableSpots > 0">📧 Contacter</span>
-            <span *ngIf="accommodation.availableSpots === 0">❌ Complet</span>
+            [disabled]="getAvailableSpots(accommodation) === 0">
+            <span *ngIf="getAvailableSpots(accommodation) > 0">📧 Contacter</span>
+            <span *ngIf="getAvailableSpots(accommodation) === 0">❌ Complet</span>
           </button>
         </div>
       </div>

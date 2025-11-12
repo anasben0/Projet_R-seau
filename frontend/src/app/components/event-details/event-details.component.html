@@ -26,7 +26,42 @@
           </span>
         </div>
       </div>
+      <!-- Bouton modifier pour les admins -->
+      <button *ngIf="isAdmin" class="edit-btn" (click)="toggleEditForm()">
+        {{ showEditForm ? '❌ Annuler' : '✏️ Modifier' }}
+      </button>
     </div>
+  </div>
+
+  <!-- Formulaire de modification (visible uniquement pour les admins) -->
+  <div *ngIf="showEditForm && isAdmin" class="edit-form-container">
+    <h2>✏️ Modifier l'événement</h2>
+    <form class="edit-form" (ngSubmit)="saveEvent()">
+      <div class="form-group">
+        <label>Nom de l'événement</label>
+        <input type="text" [(ngModel)]="editForm.name" name="name" required>
+      </div>
+      <div class="form-group">
+        <label>École (non modifiable)</label>
+        <input type="text" [value]="'Polytech ' + event.location" name="school" disabled readonly style="background: #f0f0f0; cursor: not-allowed;">
+      </div>
+      <div class="form-group">
+        <label>Adresse exacte de l'événement</label>
+        <input type="text" [(ngModel)]="editForm.address" name="address" required placeholder="Ex: 15 rue de la Fête, Orsay, France">
+      </div>
+      <div class="form-group">
+        <label>Dates</label>
+        <input type="text" [(ngModel)]="editForm.dates" name="dates" required placeholder="Ex: 12-14">
+      </div>
+      <div class="form-group">
+        <label>Description</label>
+        <textarea [(ngModel)]="editForm.description" name="description" rows="4" required></textarea>
+      </div>
+      <div class="form-actions">
+        <button type="submit" class="btn-save">💾 Enregistrer</button>
+        <button type="button" class="btn-cancel" (click)="cancelEdit()">❌ Annuler</button>
+      </div>
+    </form>
   </div>
 
   <!-- Contenu principal -->
@@ -44,10 +79,17 @@
           </div>
         </div>
         <div class="detail-item">
+          <div class="detail-icon">🏫</div>
+          <div class="detail-content">
+            <h3>École</h3>
+            <p>Polytech {{ event.location }}</p>
+          </div>
+        </div>
+        <div class="detail-item">
           <div class="detail-icon">📍</div>
           <div class="detail-content">
-            <h3>Lieu</h3>
-            <p>{{ event.location }}</p>
+            <h3>Adresse</h3>
+            <p>{{ event.address }}</p>
           </div>
         </div>
         <div class="detail-item">
@@ -75,9 +117,9 @@
         <div class="action-card accommodation" (click)="goToAccommodation()">
           <div class="card-icon">🏠</div>
           <h3>Trouver un logement</h3>
-          <p>Recherchez un hébergement pour l'événement {{ event.name }}</p>
+          <p>Recherchez un hébergement à {{ event.location }} pour l'événement</p>
           <button class="action-btn">
-            Explorer les logements →
+            Voir les hébergements à {{ event.location }} →
           </button>
         </div>
 

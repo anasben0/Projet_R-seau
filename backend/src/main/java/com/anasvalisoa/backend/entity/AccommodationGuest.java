@@ -25,7 +25,7 @@ public class AccommodationGuest {
     private User guest;
 
     @Enumerated(EnumType.STRING)
-    @Column(name = "status", nullable = false, columnDefinition = "request_status")
+    @Column(name = "status", nullable = false)
     private RequestStatus status;
 
     @Column(name = "requested_at", nullable = false, updatable = false)

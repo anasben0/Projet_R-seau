@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router } from '@angular/router';
 import { EventsService, Event } from '../../services/events.service';
@@ -18,12 +18,26 @@ export class EventsComponent implements OnInit {
 
   constructor(
     private router: Router,
-    private eventsService: EventsService
+    private eventsService: EventsService,
+    private cdr: ChangeDetectorRef
   ) {}
 
   ngOnInit(): void {
-    this.events = this.eventsService.getAllEvents();
-    this.filteredEvents = this.events;
+    console.log('🔵 EventsComponent: Loading events from API...');
+    // Charger les événements depuis l'API
+    this.eventsService.getAllEventsFromAPI().subscribe({
+      next: (events) => {
+        console.log(`✅ EventsComponent: Loaded ${events.length} events`);
+        this.events = events;
+        this.filteredEvents = events;
+        // Forcer la détection de changement
+        this.cdr.detectChanges();
+      },
+      error: (error) => {
+        console.error('❌ Error loading events:', error);
+        alert('❌ Erreur lors du chargement des événements');
+      }
+    });
   }
 
   filterByMonth(month: string): void {
@@ -31,11 +45,12 @@ export class EventsComponent implements OnInit {
     if (month === 'Tous') {
       this.filteredEvents = this.events;
     } else {
-      this.filteredEvents = this.events.filter(event => event.month === month);
+      this.filteredEvents = this.eventsService.getEventsByMonth(this.events, month);
     }
   }
 
   viewEventDetails(event: Event): void {
+    console.log(`🔵 Navigating to event details: ${event.name} (ID: ${event.id})`);
     // Navigation vers la page de détails de l'événement
     this.router.navigate(['/events', event.id]);
   }
