@@ -5,6 +5,7 @@ import jakarta.validation.constraints.Min;
 public class UpdateAccommodationRequest {
 
     private String title;
+    private String description;
     private String address;
     private String contact;
 
@@ -15,8 +16,9 @@ public class UpdateAccommodationRequest {
     public UpdateAccommodationRequest() {
     }
 
-    public UpdateAccommodationRequest(String title, String address, String contact, Integer capacity) {
+    public UpdateAccommodationRequest(String title, String description, String address, String contact, Integer capacity) {
         this.title = title;
+        this.description = description;
         this.address = address;
         this.contact = contact;
         this.capacity = capacity;
@@ -29,6 +31,14 @@ public class UpdateAccommodationRequest {
 
     public void setTitle(String title) {
         this.title = title;
+    }
+
+    public String getDescription() {
+        return description;
+    }
+
+    public void setDescription(String description) {
+        this.description = description;
     }
 
     public String getAddress() {

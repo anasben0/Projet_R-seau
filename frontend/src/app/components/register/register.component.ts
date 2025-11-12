@@ -20,6 +20,7 @@ export class RegisterComponent implements OnInit {
   loadingSchools = true;
   errorMessage = '';
   successMessage = '';
+  isAdminAccount = false; // Flag pour savoir si on crée un compte admin
 
   constructor(
     private fb: FormBuilder,
@@ -42,7 +43,11 @@ export class RegisterComponent implements OnInit {
       phone: [''],
       schoolId: ['', [Validators.required]],
       password: ['', [Validators.required, Validators.minLength(6)]],
-      confirmPassword: ['', [Validators.required]]
+      confirmPassword: ['', [Validators.required]],
+      // Champs pour créer un compte admin
+      isAdmin: [false],
+      adminEmail: [''],
+      adminPassword: ['']
     }, { validators: this.passwordMatchValidator });
 
     // Charger les écoles
@@ -76,6 +81,27 @@ export class RegisterComponent implements OnInit {
     return null;
   }
 
+  onAdminCheckboxChange(checked: boolean): void {
+    this.isAdminAccount = checked;
+    
+    if (checked) {
+      // Rendre les champs admin obligatoires
+      this.registerForm.get('adminEmail')?.setValidators([Validators.required, Validators.email]);
+      this.registerForm.get('adminPassword')?.setValidators([Validators.required]);
+    } else {
+      // Retirer les validateurs et réinitialiser les champs
+      this.registerForm.get('adminEmail')?.clearValidators();
+      this.registerForm.get('adminPassword')?.clearValidators();
+      this.registerForm.patchValue({
+        adminEmail: '',
+        adminPassword: ''
+      });
+    }
+    
+    this.registerForm.get('adminEmail')?.updateValueAndValidity();
+    this.registerForm.get('adminPassword')?.updateValueAndValidity();
+  }
+
   onSubmit(): void {
     if (this.registerForm.invalid) {
       this.errorMessage = 'Veuillez remplir tous les champs correctement.';
@@ -89,10 +115,45 @@ export class RegisterComponent implements OnInit {
     this.errorMessage = '';
     this.successMessage = '';
 
-    const { confirmPassword, ...registerData } = this.registerForm.value;
+    const { confirmPassword, adminEmail, adminPassword, ...registerData } = this.registerForm.value;
     
     console.log('Submitting registration:', { ...registerData, password: '***' });
 
+    // Si compte admin, valider d'abord les credentials admin
+    if (this.isAdminAccount) {
+      console.log('Validating admin credentials...');
+      this.authService.login({ email: adminEmail, password: adminPassword }).subscribe({
+        next: (loginResponse) => {
+          console.log('Admin validation response:', loginResponse);
+          
+          // Vérifier que l'utilisateur qui valide est bien admin
+          if (loginResponse.user?.role !== 'admin') {
+            this.errorMessage = 'Seul un administrateur peut créer un compte admin.';
+            this.loading = false;
+            return;
+          }
+          
+          // Credentials admin valides, procéder à l'inscription avec rôle admin
+          const adminRegisterData = {
+            ...registerData,
+            role: 'admin'
+          };
+          
+          this.performRegistration(adminRegisterData);
+        },
+        error: (error) => {
+          console.error('Erreur validation admin:', error);
+          this.errorMessage = 'Identifiants administrateur invalides.';
+          this.loading = false;
+        }
+      });
+    } else {
+      // Inscription normale (utilisateur standard)
+      this.performRegistration(registerData);
+    }
+  }
+
+  private performRegistration(registerData: any): void {
     this.authService.register(registerData).subscribe({
       next: (response) => {
         console.log('Registration response:', response);
@@ -122,4 +183,7 @@ export class RegisterComponent implements OnInit {
   get schoolId() { return this.registerForm.get('schoolId'); }
   get password() { return this.registerForm.get('password'); }
   get confirmPassword() { return this.registerForm.get('confirmPassword'); }
+  get isAdmin() { return this.registerForm.get('isAdmin'); }
+  get adminEmail() { return this.registerForm.get('adminEmail'); }
+  get adminPassword() { return this.registerForm.get('adminPassword'); }
 }

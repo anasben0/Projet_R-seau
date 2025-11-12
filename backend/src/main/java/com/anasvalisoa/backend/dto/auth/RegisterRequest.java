@@ -27,6 +27,8 @@ public class RegisterRequest {
     private UUID schoolId;
 
     private String phone;
+    
+    private String role; // "admin" ou null/vide pour user normal
 
     // Constructeurs
     public RegisterRequest() {}
@@ -57,4 +59,7 @@ public class RegisterRequest {
 
     public String getPhone() { return phone; }
     public void setPhone(String phone) { this.phone = phone; }
+
+    public String getRole() { return role; }
+    public void setRole(String role) { this.role = role; }
 }

@@ -564,6 +564,36 @@
   font-size: 1rem;
 }
 
+/* Form hints */
+.form-hint {
+  display: block;
+  margin-top: 0.5rem;
+  font-size: 0.85rem;
+  color: #666;
+  font-style: italic;
+}
+
+select {
+  width: 100%;
+  padding: 0.75rem;
+  border: 2px solid #e0e0e0;
+  border-radius: 8px;
+  font-size: 1rem;
+  background-color: white;
+  cursor: pointer;
+  transition: all 0.3s;
+}
+
+select:focus {
+  outline: none;
+  border-color: #667eea;
+  box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+}
+
+select option {
+  padding: 0.5rem;
+}
+
 /* Responsive */
 @media (max-width: 768px) {
   .accommodations-grid {
@@ -578,3 +608,4 @@
     grid-template-columns: 1fr;
   }
 }
+

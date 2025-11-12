@@ -43,6 +43,11 @@ public class AuthService {
         Instant now = Instant.now();
         String hashedPassword = passwordEncoder.encode(request.getPassword());
         
+        // Déterminer le rôle (par défaut "member" si non spécifié)
+        String role = (request.getRole() != null && request.getRole().equalsIgnoreCase("admin")) 
+                      ? "admin" 
+                      : "member";
+        
         // Insérer directement avec SQL natif pour éviter les problèmes d'enum
         String sql = "INSERT INTO users (id, school_id, role, first_name, last_name, phone, email, password_hash, created_at) " +
                      "VALUES (:id, :schoolId, CAST(:role AS user_role), :firstName, :lastName, :phone, :email, :passwordHash, :createdAt)";
@@ -50,7 +55,7 @@ public class AuthService {
         entityManager.createNativeQuery(sql)
             .setParameter("id", userId)
             .setParameter("schoolId", request.getSchoolId())
-            .setParameter("role", "member")
+            .setParameter("role", role)
             .setParameter("firstName", request.getFirstName())
             .setParameter("lastName", request.getLastName())
             .setParameter("phone", request.getPhone())

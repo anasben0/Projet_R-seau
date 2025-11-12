@@ -25,6 +25,9 @@ public class Accommodation {
     @Column(name = "title")
     private String title;
 
+    @Column(name = "description")
+    private String description;
+
     @Column(name = "address")
     private String address;
 
@@ -52,6 +55,16 @@ public class Accommodation {
         this.event = event;
         this.host = host;
         this.title = title;
+        this.address = address;
+        this.contact = contact;
+        this.capacity = capacity;
+    }
+
+    public Accommodation(Event event, User host, String title, String description, String address, String contact, Integer capacity) {
+        this.event = event;
+        this.host = host;
+        this.title = title;
+        this.description = description;
         this.address = address;
         this.contact = contact;
         this.capacity = capacity;
@@ -88,6 +101,14 @@ public class Accommodation {
 
     public void setTitle(String title) {
         this.title = title;
+    }
+
+    public String getDescription() {
+        return description;
+    }
+
+    public void setDescription(String description) {
+        this.description = description;
     }
 
     public String getAddress() {

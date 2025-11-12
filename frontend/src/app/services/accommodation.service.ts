@@ -24,6 +24,7 @@ export interface Accommodation {
 export interface AccommodationCreateRequest {
   eventId?: string; // Optionnel - le backend utilise un événement général par défaut
   title: string;
+  description?: string;
   address: string;
   contact?: string;
   capacity: number;

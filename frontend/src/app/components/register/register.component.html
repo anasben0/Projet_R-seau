@@ -117,6 +117,55 @@
         </div>
       </div>
 
+      <!-- Compte Administrateur -->
+      <div class="admin-section">
+        <div class="checkbox-group">
+          <input
+            type="checkbox"
+            id="isAdmin"
+            formControlName="isAdmin"
+            (change)="onAdminCheckboxChange(isAdmin?.value)"
+          />
+          <label for="isAdmin">Créer un compte administrateur</label>
+        </div>
+
+        <div class="admin-validation" *ngIf="isAdminAccount">
+          <div class="info-box">
+            <span class="info-icon">ℹ️</span>
+            <p>Pour créer un compte administrateur, vous devez fournir les identifiants d'un administrateur existant.</p>
+          </div>
+
+          <div class="form-group">
+            <label for="adminEmail">Email de l'administrateur validant</label>
+            <input
+              type="email"
+              id="adminEmail"
+              formControlName="adminEmail"
+              placeholder="admin@polytech.fr"
+              [class.error]="adminEmail?.invalid && adminEmail?.touched"
+            />
+            <div class="error-text" *ngIf="adminEmail?.invalid && adminEmail?.touched">
+              <span *ngIf="adminEmail?.errors?.['required']">L'email de l'admin est requis</span>
+              <span *ngIf="adminEmail?.errors?.['email']">Email invalide</span>
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label for="adminPassword">Mot de passe de l'administrateur</label>
+            <input
+              type="password"
+              id="adminPassword"
+              formControlName="adminPassword"
+              placeholder="••••••••"
+              [class.error]="adminPassword?.invalid && adminPassword?.touched"
+            />
+            <div class="error-text" *ngIf="adminPassword?.invalid && adminPassword?.touched">
+              <span *ngIf="adminPassword?.errors?.['required']">Le mot de passe de l'admin est requis</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
       <!-- Messages -->
       <div class="error-message" *ngIf="errorMessage">
         {{ errorMessage }}

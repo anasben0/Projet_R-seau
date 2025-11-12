@@ -218,3 +218,71 @@
     padding: 30px 20px;
   }
 }
+
+/* Section Admin */
+.admin-section {
+  margin: 25px 0;
+  padding: 20px;
+  background: #f8f9fa;
+  border: 2px solid #e1e5e9;
+  border-radius: 12px;
+}
+
+.checkbox-group {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 15px;
+}
+
+.checkbox-group input[type="checkbox"] {
+  width: 20px;
+  height: 20px;
+  cursor: pointer;
+  accent-color: #667eea;
+}
+
+.checkbox-group label {
+  margin: 0;
+  cursor: pointer;
+  font-weight: 600;
+  color: #333;
+  user-select: none;
+}
+
+.admin-validation {
+  margin-top: 15px;
+  padding-top: 15px;
+  border-top: 1px solid #dee2e6;
+}
+
+.info-box {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 12px;
+  background: #e7f3ff;
+  border: 1px solid #b3d9ff;
+  border-radius: 8px;
+  margin-bottom: 15px;
+}
+
+.info-icon {
+  font-size: 20px;
+  flex-shrink: 0;
+}
+
+.info-box p {
+  margin: 0;
+  color: #004085;
+  font-size: 13px;
+  line-height: 1.5;
+}
+
+.admin-validation .form-group {
+  margin-bottom: 15px;
+}
+
+.admin-validation .form-group:last-child {
+  margin-bottom: 0;
+}

@@ -38,6 +38,7 @@ export class AccommodationDetailsComponent implements OnInit {
   isEditing: boolean = false;
   editForm: any = {
     title: '',
+    description: '',
     address: '',
     contact: '',
     capacity: 0
@@ -383,6 +384,7 @@ export class AccommodationDetailsComponent implements OnInit {
     // Copier les valeurs actuelles dans le formulaire
     this.editForm = {
       title: this.accommodation.title,
+      description: this.accommodation.description || '',
       address: this.accommodation.address,
       contact: this.accommodation.contact,
       capacity: this.accommodation.capacity
@@ -395,6 +397,7 @@ export class AccommodationDetailsComponent implements OnInit {
     this.isEditing = false;
     this.editForm = {
       title: '',
+      description: '',
       address: '',
       contact: '',
       capacity: 0
@@ -427,6 +430,7 @@ export class AccommodationDetailsComponent implements OnInit {
 
     const updateData = {
       title: this.editForm.title,
+      description: this.editForm.description,
       address: this.editForm.address,
       contact: this.editForm.contact,
       capacity: capacity

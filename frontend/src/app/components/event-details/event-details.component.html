@@ -26,10 +26,15 @@
           </span>
         </div>
       </div>
-      <!-- Bouton modifier pour les admins -->
-      <button *ngIf="isAdmin" class="edit-btn" (click)="toggleEditForm()">
-        {{ showEditForm ? '❌ Annuler' : '✏️ Modifier' }}
-      </button>
+      <!-- Boutons admin -->
+      <div *ngIf="isAdmin" class="admin-actions">
+        <button class="edit-btn" (click)="toggleEditForm()">
+          {{ showEditForm ? '❌ Annuler' : '✏️ Modifier' }}
+        </button>
+        <button class="delete-btn" (click)="deleteEvent()">
+          🗑️ Supprimer
+        </button>
+      </div>
     </div>
   </div>
 

@@ -14,6 +14,7 @@ export class Dashboard implements OnInit, AfterViewInit {
   user: any = null;
   private map: any = null;
   private events: Event[] = [];
+  private navigationEventListener: EventListener | null = null;
 
   constructor(
     private authService: AuthService,
@@ -110,7 +111,9 @@ export class Dashboard implements OnInit, AfterViewInit {
           cursor: pointer;
           transition: all 0.2s;
         " 
-        onclick="window.dispatchEvent(new CustomEvent('navigateToEvent', { detail: ${event.id} }))">
+        onmouseover="this.style.background='${event.color}44'; this.style.transform='translateX(4px)';"
+        onmouseout="this.style.background='${event.color}22'; this.style.transform='translateX(0)';"
+        onclick="window.dispatchEvent(new CustomEvent('navigateToEvent', { detail: '${event.id}' }))">
           <strong>${event.name}</strong><br>
           <small>📆 ${event.dates} ${event.month}</small>
         </div>
@@ -141,10 +144,19 @@ export class Dashboard implements OnInit, AfterViewInit {
 
     // Écouter l'événement de navigation personnalisé
     if (isPlatformBrowser(this.platformId)) {
-      window.addEventListener('navigateToEvent', ((e: CustomEvent) => {
+      // Supprimer l'ancien écouteur s'il existe
+      if (this.navigationEventListener) {
+        window.removeEventListener('navigateToEvent', this.navigationEventListener);
+      }
+      
+      // Créer et stocker le nouvel écouteur
+      this.navigationEventListener = ((e: CustomEvent) => {
         const eventId = e.detail;
+        console.log('🔵 Navigating to event from map:', eventId);
         this.router.navigate(['/events', eventId]);
-      }) as EventListener);
+      }) as EventListener;
+      
+      window.addEventListener('navigateToEvent', this.navigationEventListener);
     }
   }
 
@@ -154,6 +166,12 @@ export class Dashboard implements OnInit, AfterViewInit {
   }
 
   ngOnDestroy(): void {
+    // Nettoyer l'écouteur d'événement
+    if (this.navigationEventListener && isPlatformBrowser(this.platformId)) {
+      window.removeEventListener('navigateToEvent', this.navigationEventListener);
+    }
+    
+    // Nettoyer la carte
     if (this.map) {
       this.map.remove();
     }

@@ -12,6 +12,7 @@ public class AccommodationResponse {
     private UUID hostId;
     private String hostName;
     private String title;
+    private String description;
     private String address;
     private String contact;
     private Integer capacity;
@@ -24,7 +25,7 @@ public class AccommodationResponse {
     }
 
     public AccommodationResponse(UUID id, UUID eventId, String eventName, String schoolName, UUID hostId, String hostName,
-                                 String title, String address, String contact, Integer capacity,
+                                 String title, String description, String address, String contact, Integer capacity,
                                  Integer availableSpots, Integer acceptedGuests, ZonedDateTime createdAt) {
         this.id = id;
         this.eventId = eventId;
@@ -33,6 +34,7 @@ public class AccommodationResponse {
         this.hostId = hostId;
         this.hostName = hostName;
         this.title = title;
+        this.description = description;
         this.address = address;
         this.contact = contact;
         this.capacity = capacity;
@@ -96,6 +98,14 @@ public class AccommodationResponse {
 
     public void setTitle(String title) {
         this.title = title;
+    }
+
+    public String getDescription() {
+        return description;
+    }
+
+    public void setDescription(String description) {
+        this.description = description;
     }
 
     public String getAddress() {

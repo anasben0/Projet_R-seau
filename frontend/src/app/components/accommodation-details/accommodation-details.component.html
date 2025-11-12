@@ -53,6 +53,16 @@
           </div>
 
           <div class="form-group">
+            <label for="edit-description">Description (optionnelle)</label>
+            <textarea 
+              id="edit-description"
+              [(ngModel)]="editForm.description" 
+              name="description"
+              rows="3"
+              placeholder="Ex: Chambre spacieuse avec wifi, proche des transports..."></textarea>
+          </div>
+
+          <div class="form-group">
             <label for="edit-address">Adresse *</label>
             <input 
               type="text" 
@@ -103,6 +113,13 @@
       <!-- Mode lecture -->
       <div *ngIf="!isEditing" class="info-section">
         <h2>📋 Informations</h2>
+        
+        <!-- Description si présente -->
+        <div *ngIf="accommodation.description" class="description-section">
+          <span class="label">📝 Description</span>
+          <p class="description-text">{{ accommodation.description }}</p>
+        </div>
+        
         <div class="info-grid">
           <div class="info-item">
             <span class="label">📍 Adresse</span>

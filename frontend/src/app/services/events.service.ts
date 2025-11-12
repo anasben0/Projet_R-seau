@@ -77,6 +77,12 @@ export class EventsService {
     );
   }
 
+  createEvent(event: any, userId: string): Observable<Event> {
+    return this.http.post<Event>(`${this.apiUrl}?userId=${userId}`, event).pipe(
+      map(event => this.enrichEvent(event))
+    );
+  }
+
   updateEvent(eventId: string, request: UpdateEventRequest, userId: string): Observable<any> {
     return this.http.put(`${this.apiUrl}/${eventId}?userId=${userId}`, request);
   }

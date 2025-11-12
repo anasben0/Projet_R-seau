@@ -23,6 +23,7 @@ export class AccommodationsComponent implements OnInit {
   // Admin - Ajout de logement
   showAddForm: boolean = false;
   isAdmin: boolean = false;
+  availableEvents: any[] = []; // Liste des événements disponibles
   newAccommodation = {
     title: '',
     description: '',  // Nouvelle propriété pour la description
@@ -48,6 +49,9 @@ export class AccommodationsComponent implements OnInit {
     console.log('AccommodationsComponent - Current user:', this.authService.getCurrentUser());
     
     this.checkAdminStatus();
+    
+    // Charger les événements pour le sélecteur
+    this.loadEvents();
     
     // Charger les hébergements une fois
     this.loadAccommodations();
@@ -114,6 +118,20 @@ export class AccommodationsComponent implements OnInit {
     });
     
     console.log('Available cities loaded:', this.availableCities);
+  }
+
+  loadEvents(): void {
+    console.log('Loading events for accommodation form...');
+    this.eventsService.getAllEventsFromAPI().subscribe({
+      next: (events) => {
+        console.log('Events loaded:', events);
+        this.availableEvents = events;
+      },
+      error: (error) => {
+        console.error('Error loading events:', error);
+        this.availableEvents = [];
+      }
+    });
   }
 
   checkAdminStatus(): void {
@@ -183,13 +201,13 @@ export class AccommodationsComponent implements OnInit {
         return;
       }
 
-      // L'hébergement sera lié à l'école de l'utilisateur côté backend
-      // On envoie juste l'adresse complète avec la ville sélectionnée
+      // Inclure l'eventId dans les données
       const accommodationData = {
         title: this.newAccommodation.title,
         address: this.newAccommodation.address,
         contact: this.newAccommodation.contact,
-        capacity: Number(this.newAccommodation.capacity)
+        capacity: Number(this.newAccommodation.capacity),
+        eventId: this.newAccommodation.eventId || undefined  // Inclure l'événement sélectionné
       };
 
       console.log('Creating accommodation:', accommodationData);
@@ -216,6 +234,10 @@ export class AccommodationsComponent implements OnInit {
     }
     if (!this.newAccommodation.address.trim()) {
       alert('❌ L\'adresse complète est requise');
+      return false;
+    }
+    if (!this.newAccommodation.eventId) {
+      alert('❌ Vous devez sélectionner un événement');
       return false;
     }
     if (this.newAccommodation.capacity < 1) {

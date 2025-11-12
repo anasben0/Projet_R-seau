@@ -13,6 +13,8 @@ public class CreateAccommodationRequest {
 
     private String title;
 
+    private String description;
+
     @NotBlank(message = "Address is required")
     private String address;
 
@@ -26,9 +28,10 @@ public class CreateAccommodationRequest {
     public CreateAccommodationRequest() {
     }
 
-    public CreateAccommodationRequest(UUID eventId, String title, String address, String contact, Integer capacity) {
+    public CreateAccommodationRequest(UUID eventId, String title, String description, String address, String contact, Integer capacity) {
         this.eventId = eventId;
         this.title = title;
+        this.description = description;
         this.address = address;
         this.contact = contact;
         this.capacity = capacity;
@@ -49,6 +52,14 @@ public class CreateAccommodationRequest {
 
     public void setTitle(String title) {
         this.title = title;
+    }
+
+    public String getDescription() {
+        return description;
+    }
+
+    public void setDescription(String description) {
+        this.description = description;
     }
 
     public String getAddress() {

@@ -36,56 +36,25 @@ public class AccommodationService {
 
     @Transactional
     public AccommodationResponse createAccommodation(CreateAccommodationRequest request, UUID hostId) {
-        // Vérifier que l'utilisateur existe et récupérer son école
+        // Vérifier que l'utilisateur existe
         User host = userRepository.findById(hostId)
                 .orElseThrow(() -> new RuntimeException("User not found"));
         
-        UUID schoolId = host.getSchoolId();
-        
-        // Vérifier que l'utilisateur a une école
-        if (schoolId == null) {
-            throw new RuntimeException("User must have a school to create an accommodation");
+        // Vérifier qu'un eventId est fourni
+        if (request.getEventId() == null) {
+            throw new RuntimeException("Event ID is required to create an accommodation");
         }
         
-        // Récupérer l'objet School
-        School school = schoolRepository.findById(schoolId)
-                .orElseThrow(() -> new RuntimeException("School not found"));
-        
-        // Chercher ou créer l'événement général pour cette école
-        Event event;
-        if (request.getEventId() != null) {
-            // Si un eventId est spécifié, l'utiliser
-            event = eventRepository.findById(request.getEventId())
-                    .orElseThrow(() -> new RuntimeException("Event not found"));
-        } else {
-            // Sinon, chercher l'événement général de cette école
-            // (nom fixe pour identifier l'événement général)
-            event = eventRepository.findAll().stream()
-                    .filter(e -> "Hébergements Polytech - Réseau".equals(e.getName()) 
-                              && schoolId.equals(e.getSchoolId()))
-                    .findFirst()
-                    .orElseGet(() -> {
-                        // Créer l'événement général pour cette école
-                        Event generalEvent = new Event();
-                        generalEvent.setSchool(school);  // Définir l'objet School
-                        generalEvent.setName("Hébergements Polytech - Réseau");
-                        generalEvent.setActivities("Hébergements proposés par les membres du réseau Polytech");
-                        generalEvent.setStartsAt(java.time.OffsetDateTime.parse("2024-01-01T00:00:00Z"));
-                        generalEvent.setEndsAt(java.time.OffsetDateTime.parse("2099-12-31T23:59:59Z"));
-                        generalEvent.setAddress("France");
-                        generalEvent.setRoom("Réseau Polytech");
-                        generalEvent.setCreatedBy(hostId);
-                        generalEvent.setCreatedAt(java.time.OffsetDateTime.now());
-                        
-                        return eventRepository.save(generalEvent);
-                    });
-        }
+        // Récupérer l'événement
+        Event event = eventRepository.findById(request.getEventId())
+                .orElseThrow(() -> new RuntimeException("Event not found"));
 
         // Créer l'hébergement
         Accommodation accommodation = new Accommodation(
                 event,
                 host,
                 request.getTitle(),
+                request.getDescription(),
                 request.getAddress(),
                 request.getContact(),
                 request.getCapacity()
@@ -147,6 +116,9 @@ public class AccommodationService {
         // Mettre à jour les champs si fournis
         if (request.getTitle() != null) {
             accommodation.setTitle(request.getTitle());
+        }
+        if (request.getDescription() != null) {
+            accommodation.setDescription(request.getDescription());
         }
         if (request.getAddress() != null) {
             accommodation.setAddress(request.getAddress());
@@ -277,11 +249,12 @@ public class AccommodationService {
                 accommodation.getHost().getId(),
                 hostName,
                 accommodation.getTitle(),
+                accommodation.getDescription(),
                 accommodation.getAddress(),
                 accommodation.getContact(),
                 accommodation.getCapacity(),
-                accommodation.getCapacity() - acceptedCount.intValue(),
-                acceptedCount.intValue(),
+                Integer.valueOf(accommodation.getCapacity() - acceptedCount.intValue()),
+                Integer.valueOf(acceptedCount.intValue()),
                 accommodation.getCreatedAt()
         );
     }

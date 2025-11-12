@@ -130,6 +130,32 @@ export class EventDetailsComponent implements OnInit {
     this.showEditForm = false;
   }
 
+  deleteEvent(): void {
+    if (!this.event || !this.isAdmin) return;
+    
+    const confirmDelete = confirm(`⚠️ Êtes-vous sûr de vouloir supprimer l'événement "${this.event.name}" ?\n\nCette action est irréversible !`);
+    
+    if (!confirmDelete) return;
+    
+    const currentUser = this.authService.getCurrentUser();
+    if (!currentUser) {
+      alert('❌ Vous devez être connecté');
+      return;
+    }
+    
+    this.eventsService.deleteEvent(this.event.id, currentUser.id).subscribe({
+      next: () => {
+        alert('✅ Événement supprimé avec succès !');
+        this.router.navigate(['/events']);
+      },
+      error: (error: any) => {
+        console.error('Error deleting event:', error);
+        const errorMsg = error.error?.message || error.message || 'Erreur inconnue';
+        alert(`❌ Erreur lors de la suppression: ${errorMsg}`);
+      }
+    });
+  }
+
   goToAccommodation(): void {
     if (!this.event) return;
     

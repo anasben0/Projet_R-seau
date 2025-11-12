@@ -84,6 +84,22 @@
         </div>
 
         <div class="form-group">
+          <label>Événement associé *</label>
+          <select 
+            [(ngModel)]="newAccommodation.eventId" 
+            name="eventId"
+            required>
+            <option value="">-- Sélectionnez un événement --</option>
+            <option *ngFor="let event of availableEvents" [value]="event.id">
+              {{ event.name }} - {{ event.dates }} {{ event.month }}
+            </option>
+          </select>
+          <small class="form-hint">
+            ℹ️ Choisissez l'événement pour lequel vous proposez cet hébergement
+          </small>
+        </div>
+
+        <div class="form-group">
           <label>Description de votre logement (optionnel)</label>
           <textarea 
             [(ngModel)]="newAccommodation.description" 

@@ -6,6 +6,104 @@
         ← Retour à la CaRRte
       </button>
       <h1>📅 Planning Events RRezo</h1>
+      <!-- Bouton admin pour créer un événement -->
+      <button *ngIf="isAdmin" class="admin-create-btn" (click)="toggleCreateForm()">
+        {{ showCreateForm ? '❌ Annuler' : '➕ Créer un événement' }}
+      </button>
+    </div>
+  </div>
+
+  <!-- Formulaire de création (visible uniquement pour les admins) -->
+  <div *ngIf="isAdmin && showCreateForm" class="create-form-section">
+    <div class="create-form">
+      <h2>➕ Créer un nouvel événement</h2>
+      <form (ngSubmit)="createEvent()">
+        <div class="form-row">
+          <div class="form-group">
+            <label for="schoolId">École *</label>
+            <select id="schoolId" [(ngModel)]="newEvent.schoolId" name="schoolId" required>
+              <option value="">-- Sélectionner une école --</option>
+              <option *ngFor="let school of schools" [value]="school.id">
+                {{ school.name }}
+              </option>
+            </select>
+          </div>
+
+          <div class="form-group">
+            <label for="name">Nom de l'événement *</label>
+            <input 
+              type="text" 
+              id="name"
+              [(ngModel)]="newEvent.name" 
+              name="name"
+              required
+              placeholder="Ex: WEC SACLAY 2025">
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label for="activities">Activités</label>
+          <textarea 
+            id="activities"
+            [(ngModel)]="newEvent.activities" 
+            name="activities"
+            rows="2"
+            placeholder="Ex: Soirées, concerts, animations..."></textarea>
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label for="startsAt">Date de début *</label>
+            <input 
+              type="datetime-local" 
+              id="startsAt"
+              [(ngModel)]="newEvent.startsAt" 
+              name="startsAt"
+              required>
+          </div>
+
+          <div class="form-group">
+            <label for="endsAt">Date de fin</label>
+            <input 
+              type="datetime-local" 
+              id="endsAt"
+              [(ngModel)]="newEvent.endsAt" 
+              name="endsAt">
+          </div>
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label for="address">Adresse *</label>
+            <input 
+              type="text" 
+              id="address"
+              [(ngModel)]="newEvent.address" 
+              name="address"
+              required
+              placeholder="Ex: 15 Avenue de la République, 75001 Paris">
+          </div>
+
+          <div class="form-group">
+            <label for="room">Salle</label>
+            <input 
+              type="text" 
+              id="room"
+              [(ngModel)]="newEvent.room" 
+              name="room"
+              placeholder="Ex: Amphithéâtre A">
+          </div>
+        </div>
+
+        <div class="form-actions">
+          <button type="submit" class="btn-submit">
+            ✅ Créer l'événement
+          </button>
+          <button type="button" class="btn-cancel" (click)="toggleCreateForm()">
+            ❌ Annuler
+          </button>
+        </div>
+      </form>
     </div>
   </div>
 

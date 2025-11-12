@@ -4,6 +4,7 @@ import com.anasvalisoa.backend.dto.event.CreateEventRequest;
 import com.anasvalisoa.backend.dto.event.EventResponse;
 import com.anasvalisoa.backend.dto.event.UpdateEventRequest;
 import com.anasvalisoa.backend.entity.Event;
+import com.anasvalisoa.backend.entity.Role;
 import com.anasvalisoa.backend.entity.School;
 import com.anasvalisoa.backend.entity.User;
 import com.anasvalisoa.backend.repository.EventRepository;
@@ -33,13 +34,17 @@ public class EventService {
 
     @Transactional
     public EventResponse createEvent(CreateEventRequest request, UUID createdBy) {
+        // Validate user exists and is admin
+        User creator = userRepository.findById(createdBy)
+            .orElseThrow(() -> new IllegalArgumentException("User not found with id: " + createdBy));
+        
+        if (creator.getRole() != Role.admin) {
+            throw new SecurityException("Only administrators can create events");
+        }
+        
         // Validate school exists
         School school = schoolRepository.findById(request.getSchoolId())
             .orElseThrow(() -> new IllegalArgumentException("School not found with id: " + request.getSchoolId()));
-
-        // Validate user exists
-        User creator = userRepository.findById(createdBy)
-            .orElseThrow(() -> new IllegalArgumentException("User not found with id: " + createdBy));
 
         // Validate dates
         if (request.getEndsAt() != null && request.getEndsAt().isBefore(request.getStartsAt())) {
@@ -154,7 +159,7 @@ public class EventService {
         User user = userRepository.findById(userId)
             .orElseThrow(() -> new IllegalArgumentException("User not found"));
         
-        if (!event.getCreatedBy().equals(userId) && user.getRole() != com.anasvalisoa.backend.entity.Role.admin) {
+        if (!event.getCreatedBy().equals(userId) && user.getRole() != Role.admin) {
             throw new SecurityException("You don't have permission to delete this event");
         }
 
