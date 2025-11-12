@@ -1,5 +1,6 @@
 import { Component, OnInit, PLATFORM_ID, Inject, ChangeDetectorRef } from '@angular/core';
 import { CommonModule, isPlatformBrowser } from '@angular/common';
+import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
 import { AccommodationService, Accommodation } from '../../services/accommodation.service';
 import { AuthService } from '../../services/auth.service';
@@ -18,7 +19,7 @@ export interface Guest {
 @Component({
   selector: 'app-accommodation-details',
   standalone: true,
-  imports: [CommonModule],
+  imports: [CommonModule, FormsModule],
   templateUrl: './accommodation-details.component.html',
   styleUrls: ['./accommodation-details.component.css']
 })
@@ -32,6 +33,15 @@ export class AccommodationDetailsComponent implements OnInit {
   
   // Statut de la demande de l'utilisateur actuel
   currentUserRequest: Guest | null = null;
+  
+  // Mode édition
+  isEditing: boolean = false;
+  editForm: any = {
+    title: '',
+    address: '',
+    contact: '',
+    capacity: 0
+  };
   
   loading: boolean = true;
   error: string = '';
@@ -316,6 +326,38 @@ export class AccommodationDetailsComponent implements OnInit {
     }
   }
 
+  deleteAccommodation(): void {
+    // Vérifier que l'utilisateur est soit le propriétaire soit un admin
+    if (!this.isHost && !this.isAdmin) {
+      alert('❌ Vous n\'avez pas la permission de supprimer cet hébergement');
+      return;
+    }
+
+    if (!this.accommodation) {
+      alert('❌ Hébergement non trouvé');
+      return;
+    }
+
+    const confirmMessage = this.isAdmin && !this.isHost
+      ? `⚠️ EN TANT QU'ADMIN: Êtes-vous sûr de vouloir supprimer l'hébergement "${this.accommodation.title}" ?`
+      : `Êtes-vous sûr de vouloir supprimer votre hébergement "${this.accommodation.title}" ?`;
+
+    if (confirm(confirmMessage)) {
+      const userId = this.currentUser.id;
+      
+      this.accommodationService.deleteAccommodation(this.accommodationId, userId).subscribe({
+        next: () => {
+          alert('✅ Hébergement supprimé avec succès');
+          this.router.navigate(['/accommodations']);
+        },
+        error: (error) => {
+          console.error('Error deleting accommodation:', error);
+          alert(`❌ Erreur lors de la suppression: ${error.error?.error || error.message}`);
+        }
+      });
+    }
+  }
+
   formatDate(dateString: string): string {
     const date = new Date(dateString);
     return date.toLocaleDateString('fr-FR', {
@@ -324,6 +366,87 @@ export class AccommodationDetailsComponent implements OnInit {
       year: 'numeric',
       hour: '2-digit',
       minute: '2-digit'
+    });
+  }
+
+  startEditing(): void {
+    if (!this.isHost) {
+      alert('❌ Seul le propriétaire peut modifier cet hébergement');
+      return;
+    }
+
+    if (!this.accommodation) {
+      alert('❌ Hébergement non trouvé');
+      return;
+    }
+
+    // Copier les valeurs actuelles dans le formulaire
+    this.editForm = {
+      title: this.accommodation.title,
+      address: this.accommodation.address,
+      contact: this.accommodation.contact,
+      capacity: this.accommodation.capacity
+    };
+
+    this.isEditing = true;
+  }
+
+  cancelEditing(): void {
+    this.isEditing = false;
+    this.editForm = {
+      title: '',
+      address: '',
+      contact: '',
+      capacity: 0
+    };
+  }
+
+  saveChanges(): void {
+    if (!this.accommodation) {
+      alert('❌ Hébergement non trouvé');
+      return;
+    }
+
+    // Validation basique
+    if (!this.editForm.title || !this.editForm.address || !this.editForm.contact) {
+      alert('❌ Veuillez remplir tous les champs obligatoires');
+      return;
+    }
+
+    const capacity = Number(this.editForm.capacity);
+    if (isNaN(capacity) || capacity < 1) {
+      alert('❌ La capacité doit être un nombre positif');
+      return;
+    }
+
+    const acceptedCount = this.getAcceptedGuests().length;
+    if (capacity < acceptedCount) {
+      alert(`❌ La capacité ne peut pas être inférieure au nombre de personnes déjà acceptées (${acceptedCount})`);
+      return;
+    }
+
+    const updateData = {
+      title: this.editForm.title,
+      address: this.editForm.address,
+      contact: this.editForm.contact,
+      capacity: capacity
+    };
+
+    this.accommodationService.updateAccommodation(
+      this.accommodationId,
+      this.currentUser.id,
+      updateData
+    ).subscribe({
+      next: (updated) => {
+        alert('✅ Hébergement modifié avec succès');
+        this.accommodation = updated;
+        this.isEditing = false;
+        this.cdr.detectChanges();
+      },
+      error: (error) => {
+        console.error('Error updating accommodation:', error);
+        alert(`❌ Erreur lors de la modification: ${error.error?.error || error.message}`);
+      }
     });
   }
 }

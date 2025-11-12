@@ -145,6 +145,22 @@ export class EventDetailsComponent implements OnInit {
     alert('Covoiturages pour ' + this.event?.name + ' a ' + this.event?.location + '\n\nFonctionnalite en cours de developpement...');
   }
 
+  openGoogleMaps(address: string): void {
+    if (!address) {
+      alert('Adresse non disponible');
+      return;
+    }
+    
+    // Encoder l'adresse pour l'URL
+    const encodedAddress = encodeURIComponent(address);
+    
+    // Ouvrir Google Maps dans un nouvel onglet
+    const googleMapsUrl = `https://www.google.com/maps/search/?api=1&query=${encodedAddress}`;
+    window.open(googleMapsUrl, '_blank');
+    
+    console.log('Opening Google Maps for address:', address);
+  }
+
   goBack(): void {
     this.router.navigate(['/events']);
   }

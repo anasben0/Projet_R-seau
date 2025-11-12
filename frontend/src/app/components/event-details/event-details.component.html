@@ -89,7 +89,9 @@
           <div class="detail-icon">📍</div>
           <div class="detail-content">
             <h3>Adresse</h3>
-            <p>{{ event.address }}</p>
+            <p class="address-link" (click)="openGoogleMaps(event.address)" style="cursor: pointer; color: #667eea; text-decoration: underline;">
+              {{ event.address }} 🗺️
+            </p>
           </div>
         </div>
         <div class="detail-item">

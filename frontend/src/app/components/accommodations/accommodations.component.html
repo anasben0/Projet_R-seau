@@ -37,7 +37,7 @@
 
     <!-- Filtres par ville -->
     <div class="filters-section">
-      <h2>Filtrer par ville</h2>
+      <h2>Filtrer par école Polytech</h2>
       <div class="city-filters">
         <button 
           *ngFor="let city of availableCities" 
@@ -61,33 +61,25 @@
     <div class="add-form-container" *ngIf="showAddForm && isAdmin">
       <h3>🏠 Proposer mon hébergement</h3>
       <p class="form-intro">Partagez votre logement avec d'autres étudiants du réseau Polytech !</p>
+      <p class="info-note">ℹ️ Votre hébergement sera automatiquement associé à votre école Polytech</p>
       <form class="add-form" (ngSubmit)="addAccommodation()">
-        <div class="form-row">
-          <div class="form-group">
-            <label>Titre *</label>
-            <input 
-              type="text" 
-              [(ngModel)]="newAccommodation.title" 
-              name="title"
-              placeholder="Ex: Résidence Polytech"
-              required>
-          </div>
-          <div class="form-group">
-            <label>Ville *</label>
-            <select [(ngModel)]="newAccommodation.city" name="city" required>
-              <option value="">Sélectionner une ville</option>
-              <option *ngFor="let city of availableCities.slice(1)" [value]="city">{{ city }}</option>
-            </select>
-          </div>
+        <div class="form-group">
+          <label>Titre *</label>
+          <input 
+            type="text" 
+            [(ngModel)]="newAccommodation.title" 
+            name="title"
+            placeholder="Ex: Appartement T2 centre-ville"
+            required>
         </div>
 
         <div class="form-group">
-          <label>Adresse *</label>
+          <label>Adresse complète *</label>
           <input 
             type="text" 
             [(ngModel)]="newAccommodation.address" 
             name="address"
-            placeholder="Ex: 15 Rue de la République"
+            placeholder="Ex: 15 Rue de la République, Lyon"
             required>
         </div>
 
@@ -161,7 +153,7 @@
         <!-- Contenu de la carte -->
         <div class="card-header">
           <h3>{{ accommodation.title }}</h3>
-          <span class="city-badge">📍 {{ accommodation.city }}</span>
+          <span class="city-badge">🏫 Polytech {{ accommodation.schoolName || accommodation.city }}</span>
         </div>
 
         <div class="card-body">

@@ -99,25 +99,21 @@ export class AccommodationsComponent implements OnInit {
   }
 
   loadAvailableCities(): void {
-    // Charger les écoles disponibles depuis les événements
-    this.eventsService.getAllEventsFromAPI().subscribe({
-      next: (events) => {
-        // Extraire les noms d'écoles uniques depuis les événements
-        const eventSchools = [...new Set(events.map((e: any) => e.location).filter((loc: string) => loc))];
-        
-        // Extraire les noms d'écoles depuis les hébergements
-        const accommodationSchools = [...new Set(this.accommodations.map(acc => acc.schoolName).filter(school => school))];
-        
-        // Combiner et dédupliquer
-        this.availableCities = ['Toutes', ...new Set([...eventSchools, ...accommodationSchools])].sort();
-      },
-      error: (error) => {
-        console.error('Error loading events for schools:', error);
-        // Fallback: utiliser uniquement les écoles des hébergements
-        const accommodationSchools = [...new Set(this.accommodations.map(acc => acc.schoolName).filter(school => school))] as string[];
-        this.availableCities = ['Toutes', ...accommodationSchools].sort();
-      }
+    // Extraire les noms d'écoles uniques depuis les hébergements
+    const schoolsFromAccommodations = [...new Set(
+      this.accommodations
+        .map(acc => acc.schoolName)
+        .filter(school => school && school.trim())
+    )] as string[];
+    
+    // Trier et ajouter "Toutes" en premier
+    this.availableCities = ['Toutes', ...schoolsFromAccommodations].sort((a, b) => {
+      if (a === 'Toutes') return -1;
+      if (b === 'Toutes') return 1;
+      return a.localeCompare(b);
     });
+    
+    console.log('Available cities loaded:', this.availableCities);
   }
 
   checkAdminStatus(): void {
@@ -136,11 +132,16 @@ export class AccommodationsComponent implements OnInit {
   }
 
   applyFilters(): void {
+    console.log('Applying filters - Selected city:', this.selectedCity, 'Search query:', this.searchQuery);
     let filtered = [...this.accommodations]; // Créer une copie
 
-    // Filtre par école (utilise schoolName au lieu de city)
+    // Filtre par école (utilise schoolName)
     if (this.selectedCity !== 'Toutes') {
-      filtered = filtered.filter(acc => acc.schoolName === this.selectedCity);
+      filtered = filtered.filter(acc => {
+        const matches = acc.schoolName === this.selectedCity;
+        console.log(`Checking ${acc.title}: schoolName="${acc.schoolName}", matches=${matches}`);
+        return matches;
+      });
     }
 
     // Filtre par recherche
@@ -149,12 +150,14 @@ export class AccommodationsComponent implements OnInit {
       filtered = filtered.filter(acc =>
         acc.title.toLowerCase().includes(query) ||
         acc.address.toLowerCase().includes(query) ||
-        acc.city.toLowerCase().includes(query)
+        (acc.schoolName && acc.schoolName.toLowerCase().includes(query)) ||
+        (acc.city && acc.city.toLowerCase().includes(query))
       );
     }
 
     this.filteredAccommodations = [...filtered]; // Nouvelle référence pour forcer le re-render
     console.log('Filters applied. Results:', this.filteredAccommodations.length);
+    console.log('Filtered accommodations:', this.filteredAccommodations);
   }
 
   toggleAddForm(): void {
@@ -180,13 +183,16 @@ export class AccommodationsComponent implements OnInit {
         return;
       }
 
-      // Plus besoin de spécifier eventId - le backend gère l'événement général automatiquement
+      // L'hébergement sera lié à l'école de l'utilisateur côté backend
+      // On envoie juste l'adresse complète avec la ville sélectionnée
       const accommodationData = {
         title: this.newAccommodation.title,
-        address: `${this.newAccommodation.address}, ${this.newAccommodation.city}`,
+        address: this.newAccommodation.address,
         contact: this.newAccommodation.contact,
         capacity: Number(this.newAccommodation.capacity)
       };
+
+      console.log('Creating accommodation:', accommodationData);
 
       this.accommodationService.addAccommodation(user.id, accommodationData).subscribe({
         next: (accommodation) => {
@@ -209,11 +215,7 @@ export class AccommodationsComponent implements OnInit {
       return false;
     }
     if (!this.newAccommodation.address.trim()) {
-      alert('❌ L\'adresse est requise');
-      return false;
-    }
-    if (!this.newAccommodation.city.trim()) {
-      alert('❌ La ville est requise');
+      alert('❌ L\'adresse complète est requise');
       return false;
     }
     if (this.newAccommodation.capacity < 1) {

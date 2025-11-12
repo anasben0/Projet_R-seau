@@ -42,6 +42,15 @@ public class AccommodationService {
         
         UUID schoolId = host.getSchoolId();
         
+        // Vérifier que l'utilisateur a une école
+        if (schoolId == null) {
+            throw new RuntimeException("User must have a school to create an accommodation");
+        }
+        
+        // Récupérer l'objet School
+        School school = schoolRepository.findById(schoolId)
+                .orElseThrow(() -> new RuntimeException("School not found"));
+        
         // Chercher ou créer l'événement général pour cette école
         Event event;
         if (request.getEventId() != null) {
@@ -58,7 +67,7 @@ public class AccommodationService {
                     .orElseGet(() -> {
                         // Créer l'événement général pour cette école
                         Event generalEvent = new Event();
-                        generalEvent.setSchoolId(schoolId);
+                        generalEvent.setSchool(school);  // Définir l'objet School
                         generalEvent.setName("Hébergements Polytech - Réseau");
                         generalEvent.setActivities("Hébergements proposés par les membres du réseau Polytech");
                         generalEvent.setStartsAt(java.time.OffsetDateTime.parse("2024-01-01T00:00:00Z"));
@@ -166,9 +175,12 @@ public class AccommodationService {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new RuntimeException("User not found"));
 
-        // Vérifier que l'utilisateur est le créateur
-        if (!accommodation.getHost().getId().equals(userId)) {
-            throw new RuntimeException("Only the host can delete this accommodation");
+        // Vérifier que l'utilisateur est le créateur OU un admin
+        boolean isHost = accommodation.getHost().getId().equals(userId);
+        boolean isAdmin = user.getRole() != null && user.getRole().name().equalsIgnoreCase("admin");
+        
+        if (!isHost && !isAdmin) {
+            throw new RuntimeException("Only the host or an admin can delete this accommodation");
         }
 
         accommodationRepository.delete(accommodation);

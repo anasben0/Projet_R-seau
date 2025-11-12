@@ -19,14 +19,89 @@
       <button class="btn-back" (click)="goBack()">← Retour</button>
       <h1>{{ accommodation.title }}</h1>
       <div class="header-info">
-        <span class="city-badge">📍 {{ accommodation.city }}</span>
+        <span class="city-badge">🎓 {{ accommodation.schoolName }}</span>
         <span class="host-info">🏠 Proposé par {{ accommodation.hostName }}</span>
+      </div>
+      <!-- Bouton supprimer pour le propriétaire ou l'admin -->
+      <div *ngIf="isHost || isAdmin" class="admin-actions">
+        <button *ngIf="isHost && !isEditing" class="btn-edit" (click)="startEditing()">
+          ✏️ Modifier
+        </button>
+        <button class="btn-delete" (click)="deleteAccommodation()">
+          🗑️ Supprimer cet hébergement
+        </button>
+        <span *ngIf="isAdmin && !isHost" class="admin-badge">👑 ADMIN</span>
       </div>
     </div>
 
     <!-- Main Info Card -->
     <div class="info-card">
-      <div class="info-section">
+      
+      <!-- Mode édition -->
+      <div *ngIf="isEditing" class="edit-form">
+        <h2>✏️ Modifier l'hébergement</h2>
+        <form (ngSubmit)="saveChanges()">
+          <div class="form-group">
+            <label for="edit-title">Titre *</label>
+            <input 
+              type="text" 
+              id="edit-title"
+              [(ngModel)]="editForm.title" 
+              name="title"
+              required
+              placeholder="Ex: Chambre disponible pour WEI">
+          </div>
+
+          <div class="form-group">
+            <label for="edit-address">Adresse *</label>
+            <input 
+              type="text" 
+              id="edit-address"
+              [(ngModel)]="editForm.address" 
+              name="address"
+              required
+              placeholder="Ex: 15 rue de la République, 75001 Paris">
+          </div>
+
+          <div class="form-group">
+            <label for="edit-contact">Contact *</label>
+            <input 
+              type="text" 
+              id="edit-contact"
+              [(ngModel)]="editForm.contact" 
+              name="contact"
+              required
+              placeholder="Email ou téléphone">
+          </div>
+
+          <div class="form-group">
+            <label for="edit-capacity">Capacité *</label>
+            <input 
+              type="number" 
+              id="edit-capacity"
+              [(ngModel)]="editForm.capacity" 
+              name="capacity"
+              required
+              min="1"
+              placeholder="Nombre de places">
+            <small class="form-hint">
+              ⚠️ Minimum: {{ getAcceptedGuests().length }} (nombre de personnes déjà acceptées)
+            </small>
+          </div>
+
+          <div class="form-actions">
+            <button type="submit" class="btn-save">
+              ✅ Enregistrer
+            </button>
+            <button type="button" class="btn-cancel" (click)="cancelEditing()">
+              ❌ Annuler
+            </button>
+          </div>
+        </form>
+      </div>
+
+      <!-- Mode lecture -->
+      <div *ngIf="!isEditing" class="info-section">
         <h2>📋 Informations</h2>
         <div class="info-grid">
           <div class="info-item">
@@ -48,8 +123,8 @@
         </div>
       </div>
 
-      <!-- Progress bar -->
-      <div class="capacity-progress">
+      <!-- Progress bar (toujours visible) -->
+      <div *ngIf="!isEditing" class="capacity-progress">
         <div class="progress-info">
           <span>Occupation: {{ getAcceptedGuests().length }} / {{ accommodation.capacity }}</span>
           <span>{{ getAvailableSpots() }} place(s) disponible(s)</span>
