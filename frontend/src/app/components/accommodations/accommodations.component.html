@@ -1,0 +1,225 @@
+<div class="accommodations-container">
+  <!-- Header -->
+  <div class="accommodations-header">
+    <div class="header-content">
+      <button class="back-btn" (click)="goToDashboard()">
+        ← Retour à la CaRRte
+      </button>
+      <h1>🏠 Hébergements Polytech</h1>
+      <p>Trouvez un logement pour vos événements réseau</p>
+    </div>
+  </div>
+
+  <!-- Main Content -->
+  <div class="accommodations-content">
+    
+    <!-- Message de filtre automatique -->
+    <div *ngIf="selectedCity !== 'Toutes'" class="filter-notification">
+      <span class="icon">🔍</span>
+      <span>Hébergements filtrés pour <strong>{{ selectedCity }}</strong></span>
+      <button class="clear-filter-btn" (click)="filterByCity('Toutes')">
+        ✕ Voir tous les hébergements
+      </button>
+    </div>
+
+    <!-- Section recherche -->
+    <div class="search-section">
+      <div class="search-bar">
+        <span class="search-icon">🔍</span>
+        <input 
+          type="text" 
+          [(ngModel)]="searchQuery"
+          (input)="onSearchChange()"
+          placeholder="Rechercher un hébergement par nom, adresse ou ville..."
+          class="search-input">
+      </div>
+    </div>
+
+    <!-- Filtres par ville -->
+    <div class="filters-section">
+      <h2>Filtrer par école Polytech</h2>
+      <div class="city-filters">
+        <button 
+          *ngFor="let city of availableCities" 
+          class="filter-btn"
+          [class.active]="selectedCity === city"
+          (click)="filterByCity(city)">
+          {{ city }}
+        </button>
+      </div>
+    </div>
+
+    <!-- Bouton Ajouter (Tous les utilisateurs connectés) -->
+    <div class="user-section" *ngIf="isAdmin">
+      <button class="add-btn" (click)="toggleAddForm()">
+        {{ showAddForm ? '❌ Annuler' : '➕ Proposer mon hébergement' }}
+      </button>
+      <p class="help-text" *ngIf="!showAddForm">Vous pouvez proposer votre logement pour accueillir d'autres étudiants Polytech</p>
+    </div>
+
+    <!-- Formulaire d'ajout (Utilisateurs connectés) -->
+    <div class="add-form-container" *ngIf="showAddForm && isAdmin">
+      <h3>🏠 Proposer mon hébergement</h3>
+      <p class="form-intro">Partagez votre logement avec d'autres étudiants du réseau Polytech !</p>
+      <p class="info-note">ℹ️ Votre hébergement sera automatiquement associé à votre école Polytech</p>
+      <form class="add-form" (ngSubmit)="addAccommodation()">
+        <div class="form-group">
+          <label>Titre *</label>
+          <input 
+            type="text" 
+            [(ngModel)]="newAccommodation.title" 
+            name="title"
+            placeholder="Ex: Appartement T2 centre-ville"
+            required>
+        </div>
+
+        <div class="form-group">
+          <label>Adresse complète *</label>
+          <input 
+            type="text" 
+            [(ngModel)]="newAccommodation.address" 
+            name="address"
+            placeholder="Ex: 15 Rue de la République, Lyon"
+            required>
+        </div>
+
+        <div class="form-group">
+          <label>Événement associé *</label>
+          <select 
+            [(ngModel)]="newAccommodation.eventId" 
+            name="eventId"
+            required>
+            <option value="">-- Sélectionnez un événement --</option>
+            <option *ngFor="let event of availableEvents" [value]="event.id">
+              {{ event.name }} - {{ event.dates }} {{ event.month }}
+            </option>
+          </select>
+          <small class="form-hint">
+            ℹ️ Choisissez l'événement pour lequel vous proposez cet hébergement
+          </small>
+        </div>
+
+        <div class="form-group">
+          <label>Description de votre logement (optionnel)</label>
+          <textarea 
+            [(ngModel)]="newAccommodation.description" 
+            name="description"
+            placeholder="Ex: Appartement calme, proche des transports. Possibilité de prêter un matelas..."
+            rows="3"></textarea>
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label>Capacité (nombre de places) *</label>
+            <input 
+              type="number" 
+              [(ngModel)]="newAccommodation.capacity" 
+              name="capacity"
+              min="1"
+              required>
+          </div>
+          <div class="form-group">
+            <label>Contact (rempli automatiquement)</label>
+            <input 
+              type="text" 
+              [(ngModel)]="newAccommodation.contact" 
+              name="contact"
+              placeholder="Votre email et téléphone"
+              readonly
+              title="Contact rempli automatiquement avec vos informations de compte">
+          </div>
+        </div>
+
+        <button type="submit" class="submit-btn">
+          ✅ Ajouter l'hébergement
+        </button>
+      </form>
+    </div>
+
+    <!-- Statistiques -->
+    <div class="stats-section">
+      <div class="stat-card">
+        <div class="stat-icon">🏠</div>
+        <div class="stat-content">
+          <h3>{{ filteredAccommodations.length }}</h3>
+          <p>Hébergement(s) trouvé(s)</p>
+        </div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-icon">🛏️</div>
+        <div class="stat-content">
+          <h3>{{ getTotalAvailableSpots() }}</h3>
+          <p>Place(s) disponible(s)</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Liste des hébergements -->
+    <div class="accommodations-grid">
+      <div 
+        *ngFor="let accommodation of filteredAccommodations" 
+        class="accommodation-card"
+        [class.full]="getAvailableSpots(accommodation) === 0">
+        
+        <!-- Badge de disponibilité -->
+        <div class="availability-badge" [ngClass]="getAvailabilityClass(accommodation)">
+          {{ getAvailabilityText(accommodation) }}
+        </div>
+
+        <!-- Contenu de la carte -->
+        <div class="card-header">
+          <h3>{{ accommodation.title }}</h3>
+          <span class="city-badge">🏫 Polytech {{ accommodation.schoolName || accommodation.city }}</span>
+        </div>
+
+        <div class="card-body">
+          <div class="info-item">
+            <span class="icon">📍</span>
+            <span>{{ accommodation.address }}</span>
+          </div>
+
+          <div class="info-item">
+            <span class="icon">👥</span>
+            <span>{{ getAvailableSpots(accommodation) }} / {{ accommodation.capacity }} places</span>
+          </div>
+
+          <div class="info-item" *ngIf="accommodation.contact">
+            <span class="icon">📞</span>
+            <span>{{ accommodation.contact }}</span>
+          </div>
+
+          <div class="progress-bar">
+            <div 
+              class="progress-fill" 
+              [style.width.%]="(getAvailableSpots(accommodation) / accommodation.capacity) * 100"
+              [ngClass]="getAvailabilityClass(accommodation)">
+            </div>
+          </div>
+        </div>
+
+        <div class="card-footer">
+          <button 
+            class="details-btn" 
+            (click)="viewDetails(accommodation.id)">
+            👁️ Voir détails
+          </button>
+          <button 
+            class="contact-btn" 
+            (click)="contactAccommodation(accommodation)"
+            [disabled]="getAvailableSpots(accommodation) === 0">
+            <span *ngIf="getAvailableSpots(accommodation) > 0">📧 Contacter</span>
+            <span *ngIf="getAvailableSpots(accommodation) === 0">❌ Complet</span>
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Message si aucun hébergement -->
+    <div *ngIf="filteredAccommodations.length === 0" class="no-results">
+      <div class="no-results-icon">🏚️</div>
+      <h3>Aucun hébergement trouvé</h3>
+      <p>Essayez de modifier vos critères de recherche</p>
+    </div>
+
+  </div>
+</div>

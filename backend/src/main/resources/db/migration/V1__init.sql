@@ -1,12 +1,5 @@
 -- Extensions utiles
-CREATE EXTENSION IF NOT EXISTS p-- Demandes d'hébergement
-CREATE TABLE accommodation_guests (
-  accommodation_id UUID NOT NULL REFERENCES accommodations(id) ON DELETE CASCADE,
-  guest_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
-  status request_status NOT NULL,
-  requested_at TIMESTAMPTZ NOT NULL DEFAULT now(),
-  PRIMARY KEY (accommodation_id, guest_id)
-); -- pour gen_random_uuid()
+CREATE EXTENSION IF NOT EXISTS pgcrypto; -- pour gen_random_uuid()
 CREATE EXTENSION IF NOT EXISTS pg_trgm;  -- pour recherche floue si besoin
 
 -- Types ENUM
@@ -27,7 +20,7 @@ CREATE TABLE users (
   first_name TEXT NOT NULL,
   last_name  TEXT NOT NULL,
   phone TEXT,
-  email TEXT UNIQUE,
+  email TEXT UNIQUE NOT NULL,
   password_hash TEXT NOT NULL,
   created_at TIMESTAMPTZ NOT NULL DEFAULT now()
 );
@@ -42,7 +35,8 @@ CREATE TABLE events (
   ends_at   TIMESTAMPTZ,
   address TEXT,
   room TEXT,
-  created_by UUID NOT NULL REFERENCES users(id) ON DELETE RESTRICT
+  created_by UUID NOT NULL REFERENCES users(id) ON DELETE RESTRICT,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT now()
 );
 CREATE INDEX ON events (school_id, starts_at);
 
@@ -59,11 +53,11 @@ CREATE TABLE accommodations (
   UNIQUE (event_id, host_id, title)
 );
 
--- Demandes d’hébergement
+-- Demandes d'hébergement
 CREATE TABLE accommodation_guests (
   accommodation_id UUID NOT NULL REFERENCES accommodations(id) ON DELETE CASCADE,
   guest_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
-  status TEXT NOT NULL CHECK (status IN ('requested','accepted','declined')),
+  status request_status NOT NULL,
   requested_at TIMESTAMPTZ NOT NULL DEFAULT now(),
   PRIMARY KEY (accommodation_id, guest_id)
 );
@@ -92,7 +86,7 @@ CREATE TABLE ride_passengers (
 
 -- ====== Triggers anti-surbooking ======
 
--- Hébergement : pas plus d’acceptés que capacity
+-- Hébergement : pas plus d'acceptés que capacity
 CREATE OR REPLACE FUNCTION enforce_accommodation_capacity()
 RETURNS TRIGGER LANGUAGE plpgsql AS $$
 BEGIN

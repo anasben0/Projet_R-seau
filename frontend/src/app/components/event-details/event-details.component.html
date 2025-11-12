@@ -1,0 +1,171 @@
+<!-- Debug: Component loaded -->
+<!-- Message de chargement -->
+<div *ngIf="!event" class="loading-container">
+  <h2>🔍 Chargement de l'événement...</h2>
+  <p>Si cette page reste blanche, l'événement n'existe pas.</p>
+  <button class="back-btn" (click)="goBack()">← Retour aux événements</button>
+</div>
+
+<div class="event-details-container" *ngIf="event">
+  <!-- Header avec couleur de l'événement -->
+  <div class="event-header" [style.background]="'linear-gradient(135deg, ' + event.color + ' 0%, ' + event.color + 'dd 100%)'">
+    <div class="header-content">
+      <button class="back-btn" (click)="goBack()">
+        ← Retour aux événements
+      </button>
+      <div class="event-title-section">
+        <h1>{{ event.name }}</h1>
+        <div class="event-meta">
+          <span class="meta-item">
+            <span class="icon">📍</span>
+            {{ event.location }}
+          </span>
+          <span class="meta-item">
+            <span class="icon">📆</span>
+            {{ event.dates }} {{ event.month }}
+          </span>
+        </div>
+      </div>
+      <!-- Boutons admin -->
+      <div *ngIf="isAdmin" class="admin-actions">
+        <button class="edit-btn" (click)="toggleEditForm()">
+          {{ showEditForm ? '❌ Annuler' : '✏️ Modifier' }}
+        </button>
+        <button class="delete-btn" (click)="deleteEvent()">
+          🗑️ Supprimer
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Formulaire de modification (visible uniquement pour les admins) -->
+  <div *ngIf="showEditForm && isAdmin" class="edit-form-container">
+    <h2>✏️ Modifier l'événement</h2>
+    <form class="edit-form" (ngSubmit)="saveEvent()">
+      <div class="form-group">
+        <label>Nom de l'événement</label>
+        <input type="text" [(ngModel)]="editForm.name" name="name" required>
+      </div>
+      <div class="form-group">
+        <label>École (non modifiable)</label>
+        <input type="text" [value]="'Polytech ' + event.location" name="school" disabled readonly style="background: #f0f0f0; cursor: not-allowed;">
+      </div>
+      <div class="form-group">
+        <label>Adresse exacte de l'événement</label>
+        <input type="text" [(ngModel)]="editForm.address" name="address" required placeholder="Ex: 15 rue de la Fête, Orsay, France">
+      </div>
+      <div class="form-group">
+        <label>Dates</label>
+        <input type="text" [(ngModel)]="editForm.dates" name="dates" required placeholder="Ex: 12-14">
+      </div>
+      <div class="form-group">
+        <label>Description</label>
+        <textarea [(ngModel)]="editForm.description" name="description" rows="4" required></textarea>
+      </div>
+      <div class="form-actions">
+        <button type="submit" class="btn-save">💾 Enregistrer</button>
+        <button type="button" class="btn-cancel" (click)="cancelEdit()">❌ Annuler</button>
+      </div>
+    </form>
+  </div>
+
+  <!-- Contenu principal -->
+  <div class="event-content">
+    <!-- Description de l'événement -->
+    <div class="event-description-card">
+      <h2>📋 Description de l'événement</h2>
+      <p>{{ event.description }}</p>
+      <div class="event-details-grid">
+        <div class="detail-item">
+          <div class="detail-icon">📅</div>
+          <div class="detail-content">
+            <h3>Date</h3>
+            <p>{{ event.dates }} {{ event.month }}</p>
+          </div>
+        </div>
+        <div class="detail-item">
+          <div class="detail-icon">🏫</div>
+          <div class="detail-content">
+            <h3>École</h3>
+            <p>Polytech {{ event.location }}</p>
+          </div>
+        </div>
+        <div class="detail-item">
+          <div class="detail-icon">📍</div>
+          <div class="detail-content">
+            <h3>Adresse</h3>
+            <p class="address-link" (click)="openGoogleMaps(event.address)" style="cursor: pointer; color: #667eea; text-decoration: underline;">
+              {{ event.address }} 🗺️
+            </p>
+          </div>
+        </div>
+        <div class="detail-item">
+          <div class="detail-icon">🎉</div>
+          <div class="detail-content">
+            <h3>Type</h3>
+            <p>Événement Réseau Polytech</p>
+          </div>
+        </div>
+        <div class="detail-item">
+          <div class="detail-icon" [style.color]="event.color">⬤</div>
+          <div class="detail-content">
+            <h3>Thème</h3>
+            <p>{{ event.name }}</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Options principales -->
+    <div class="action-cards-container">
+      <h2>🎯 Organiser votre participation</h2>
+      <div class="action-cards">
+        <!-- Carte Hébergement -->
+        <div class="action-card accommodation" (click)="goToAccommodation()">
+          <div class="card-icon">🏠</div>
+          <h3>Trouver un logement</h3>
+          <p>Recherchez un hébergement à {{ event.location }} pour l'événement</p>
+          <button class="action-btn">
+            Voir les hébergements à {{ event.location }} →
+          </button>
+        </div>
+
+        <!-- Carte Covoiturage -->
+        <div class="action-card carpooling" (click)="goToCarpooling()">
+          <div class="card-icon">🚗</div>
+          <h3>Covoiturage</h3>
+          <p>Trouvez un covoiturage pour vous rendre à {{ event.location }}</p>
+          <button class="action-btn">
+            Voir les covoiturages →
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Informations supplémentaires -->
+    <div class="additional-info">
+      <h2>ℹ️ Informations pratiques</h2>
+      <div class="info-grid">
+        <div class="info-card">
+          <h4>🎫 Inscription</h4>
+          <p>L'inscription est obligatoire pour participer à cet événement</p>
+        </div>
+        <div class="info-card">
+          <h4>👥 Participants</h4>
+          <p>Rejoignez les étudiants de toutes les écoles Polytech</p>
+        </div>
+        <div class="info-card">
+          <h4>📱 Contact</h4>
+          <p>Pour plus d'informations, contactez le BDE de votre école</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Message si l'événement n'existe pas -->
+<div class="error-container" *ngIf="!event">
+  <h2>❌ Événement introuvable</h2>
+  <p>L'événement que vous recherchez n'existe pas.</p>
+  <button class="back-btn" (click)="goBack()">← Retour aux événements</button>
+</div>
