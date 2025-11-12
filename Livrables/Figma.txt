@@ -1,0 +1,6 @@
+Lien vers la maquette FIGMA:
+
+https://www.figma.com/design/mPJTNV7Nb68KblCRoIdw3I/Projet_R-seau?node-id=0-1&m=dev&t=ESUAzCoVAzVtEi4k-1
+
+
+Maquette en 4 etapes : connexion, page d’accueil et liste des evenements + hebergements.
